@@ -24,9 +24,11 @@
  *}
 {block name='login_form'}
 
+  {if !empty($errors[0])}
   {block name='login_form_errors'}
     {include file='_partials/sf-errors.tpl' errors=$errors[0]}
   {/block}
+  {/if}
 
   {* {block name='login_form_errors'}
     {include file='_partials/form-errors.tpl' errors=$errors['']}

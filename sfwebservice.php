@@ -1093,10 +1093,10 @@ class Sfwebservice extends Module
                         $customerUpd->note = $idSF;
                         $resUpd = $customerUpd->update();
                         if($resUpd) {
-                            $sfModule::logtxt("### Customer data updated from saleforce!");
+                            self::logtxt("### Customer data updated from saleforce!");
                         }else {
                             // maneja error
-                            $sfModule::logtxt('### No se actualizo la data en prestashop!');
+                            self::logtxt('### No se actualizo la data en prestashop!');
                         }
 
                         // echo '<br><br>--Customer exist...Customer logged!';
@@ -1455,7 +1455,7 @@ class Sfwebservice extends Module
                         self::logtxt("final_name: $final_name");
 
                         // get data2
-                        $count++;
+                        $count++; 
                         self::logtxt("contador: $count");
                         if($count != $num_details){
                             $data2[$key]['Contact_FirstName__c'] = $firstname;

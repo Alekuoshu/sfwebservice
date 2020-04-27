@@ -120,12 +120,12 @@ class PasswordController extends PasswordControllerCore
                     // $sfModule::logtxt("### Integration SF: Reset OTP -> $urlResetOTP");
 
                     // generate OTP
-                    $OTP = $this->generateNumericOTP(6);
-                    $sfModule::logtxt("### Integration SF: OTP -> $OTP");
+                    // $OTP = $this->generateNumericOTP(6);
+                    // $sfModule::logtxt("### Integration SF: OTP -> $OTP");
 
                     // dataOTP
                     $dataOTP['userEmail'] = $email;
-                    $dataOTP['OTP'] = $OTP;
+                    // $dataOTP['OTP'] = $OTP;
                     $dataOTP['siteSignature'] = $siteSignature;
 
                     // preparing data
@@ -163,7 +163,7 @@ class PasswordController extends PasswordControllerCore
                         // dataEV
                         $dataEV['userName'] = $email;
                         $dataEV['email'] = $email;
-                        $dataEV['OTP'] = $OTP;
+                        // $dataEV['OTP'] = $OTP;
                         $dataEV['siteSignature'] = $siteSignature;
 
                         // preparing data
@@ -492,8 +492,7 @@ class PasswordController extends PasswordControllerCore
             // Case if both password params not posted or different, then "change password" form is not POSTED, show it.
             if (!(Tools::isSubmit('passwd'))
                 || !(Tools::isSubmit('confirmation'))
-                || ($passwd = Tools::getValue('passwd')) !== ($confirmation = Tools::getValue('confirmation'))
-                || !Validate::isPasswd($passwd) || !Validate::isPasswd($confirmation)) {
+                || ($passwd = Tools::getValue('passwd')) !== ($confirmation = Tools::getValue('confirmation'))) {
                 // Check if passwords are here anyway, BUT does not match the password validation format
                 if (Tools::isSubmit('passwd') || Tools::isSubmit('confirmation')) {
                     $this->errors[] = $this->trans('The password and its confirmation do not match.', array(), 'Shop.Notifications.Error');
@@ -858,9 +857,18 @@ class PasswordController extends PasswordControllerCore
                         'reset_token' => Tools::getValue('reset_token'),
                     ]);
                     $this->setTemplate('customer/password-new');
+                    return 'error';
+                }else{
+                    $this->context->smarty->assign([
+                        'customer_email' => $customer->email,
+                        'customer_token' => $token,
+                        'id_customer' => $id_customer,
+                        'reset_token' => Tools::getValue('reset_token'),
+                    ]);
+                    $this->setTemplate('customer/password-new');
                     // $this->redirectWithNotifications($this->getCurrentURL());
+                    return 'ok';
                 }
-                return 'ok';
             }
 
         }

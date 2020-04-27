@@ -114,14 +114,14 @@ class CustomerFormCore extends AbstractForm
 
     public function validate()
     {
-        $emailField = $this->getField('email');
-        $id_customer = Customer::customerExists($emailField->getValue(), true, true);
-        $customer = $this->getCustomer();
-        if ($id_customer && $id_customer != $customer->id) {
-            $emailField->addError($this->translator->trans(
-                'La dirección de correo electrónico "%mail%" ya está en uso, por favor, elija otra para registrarse', array('%mail%' => $emailField->getValue()), 'Shop.Notifications.Error'
-            ));
-        }
+        // $emailField = $this->getField('email');
+        // $id_customer = Customer::customerExists($emailField->getValue(), true, true);
+        // $customer = $this->getCustomer();
+        // if ($id_customer && $id_customer != $customer->id) {
+        //     $emailField->addError($this->translator->trans(
+        //         'La dirección de correo electrónico "%mail%" ya está en uso, por favor, elija otra para registrarse', array('%mail%' => $emailField->getValue()), 'Shop.Notifications.Error'
+        //     ));
+        // }
 
         // birthday is from input type text..., so we need to convert to a valid date
         $birthdayField = $this->getField('birthday');
@@ -388,12 +388,12 @@ class CustomerFormCore extends AbstractForm
                             // $sfModule::logtxt("### Integration SF: Reset OTP -> $urlResetOTP");
 
                             // generate OTP
-                            $OTP = $this->generateNumericOTP(6);
-                            $sfModule::logtxt("### Integration SF: OTP -> $OTP");
+                            // $OTP = $this->generateNumericOTP(6);
+                            // $sfModule::logtxt("### Integration SF: OTP -> $OTP");
 
                             // dataOTP
                             $dataOTP['userEmail'] = $email;
-                            $dataOTP['OTP'] = $OTP;
+                            // $dataOTP['OTP'] = $OTP;
                             $dataOTP['siteSignature'] = $siteSignature;
 
                             // preparing data
@@ -417,7 +417,7 @@ class CustomerFormCore extends AbstractForm
                             // var_dump($resultArrayOTP);
                             // echo "</pre>";
 
-                            // Si se resetea el OTP
+                            // Si no resetea el OTP
                             if ($resultArrayOTP->rCode == 'errCode_010') {
                                 $sfModule::logtxt("### Integration SF ResetOTP: Email no existe, se puede crear el registro!");
 
@@ -478,48 +478,72 @@ class CustomerFormCore extends AbstractForm
                                 // echo "</pre>";
 
                                 if($resultArray->rCode == 'opCode_000'){
-                                    // guarda registro
-                                    $ok = $this->customerPersister->save(
-                                        $this->getCustomer(),
-                                        $clearTextPassword,
-                                        $newPassword,
-                                        $this->passwordRequired
-                                    );
+                                    $sfModule::logtxt("### Integration SF: Usuario creado en saleforce!");
+                                    $customer = new Customer();
+                                    $customerExist = $customer->getByEmail($email);
+                                    if (!Validate::isLoadedObject($customerExist)){
+                                        $sfModule::logtxt("### Validate email en PS: Usuario no existe en prestashop, se va a crear!");
+                                        // guarda registro
+                                        $ok = $this->customerPersister->save(
+                                            $this->getCustomer(),
+                                            $clearTextPassword,
+                                            $newPassword,
+                                            $this->passwordRequired
+                                        );
 
-                                    if($ok){
-                                        // var_dump('Guarda registro en prestashop');
-                                        // crea el registro en prestashop
-                                        $address->id_country = $id_country;
-                                        $address->id_customer = $this->context->customer->id;
-                                        $address->id_manufacturer = 0;
-                                        $address->id_supplier = 0;
-                                        $address->id_warehouse = 0;
-                                        $address->alias = 'Mi dirección';
-                                        $address->company = '';
-                                        $address->lastname = $lastname;
-                                        $address->firstname = $firstname;
-                                        $address->address1 = ' ';
-                                        $address->city = ' ';
-                                        $address->phone_mobile = $phone;
-                                        $address->active = 1;
-                                        $address->deleted = 0;
-                                        $address->date_add = date('Y-m-d H:i:s');
-                                        $address->date_upd = date('Y-m-d H:i:s');
-                                        if ($address->add()) {
-                                            // error_log("### Address customer created!");
-                                            $sfModule::logtxt("### Integration SF: Address customer created!");
-                                            // update table ps_address for leave empty fields
-                                            $db = Db::getInstance();
-                                            $sql = 'UPDATE '._DB_PREFIX_.'address SET address1="", city="" WHERE id_customer = '.$this->context->customer->id;
-                                            $dbResult = $db->getValue($sql);
+                                        if($ok){
+                                            // var_dump('Guarda registro en prestashop');
+                                            // crea el registro en prestashop
+                                            $address->id_country = $id_country;
+                                            $address->id_customer = $this->context->customer->id;
+                                            $address->id_manufacturer = 0;
+                                            $address->id_supplier = 0;
+                                            $address->id_warehouse = 0;
+                                            $address->alias = 'Mi dirección';
+                                            $address->company = '';
+                                            $address->lastname = $lastname;
+                                            $address->firstname = $firstname;
+                                            $address->address1 = ' ';
+                                            $address->city = ' ';
+                                            $address->phone_mobile = $phone;
+                                            $address->active = 1;
+                                            $address->deleted = 0;
+                                            $address->date_add = date('Y-m-d H:i:s');
+                                            $address->date_upd = date('Y-m-d H:i:s');
+                                            if ($address->add()) {
+                                                // error_log("### Address customer created!");
+                                                $sfModule::logtxt("### Integration SF: Address customer created!");
+                                                // update table ps_address for leave empty fields
+                                                // $db = Db::getInstance();
+                                                // $sql = 'UPDATE '._DB_PREFIX_.'address SET address1="", city="" WHERE id_customer = '.$this->context->customer->id;
+                                                // $dbResult = $db->getValue($sql);
+                                            }
                                         }
-                                    }
 
-                                    if (!$ok) {
-                                        foreach ($this->customerPersister->getErrors() as $field => $errors) {
-                                            $this->formFields[$field]->setErrors($errors);
+                                        if (!$ok) {
+                                            foreach ($this->customerPersister->getErrors() as $field => $errors) {
+                                                $this->formFields[$field]->setErrors($errors);
+                                            }
                                         }
-                                    }
+                                    } // validate email
+                                    else{
+                                        // Envia mail transaccional account
+                                        $sendMail = $this->sendConfirmationMail($this->getCustomer());
+                                        if($sendMail) $sfModule::logtxt("### Integration SF: Mail account enviado!");
+                                        // login customer
+                                        $customer->logged = 1;
+                                        $this->context->customer = $customer;
+                                        $this->context->cookie->id_customer = $customer->id;
+                                        $this->context->cookie->customer_lastname = $customer->lastname;
+                                        $this->context->cookie->customer_firstname = $customer->firstname;
+                                        $this->context->cookie->logged = 1;
+                                        $this->context->cookie->check_cgv = 1;
+                                        $this->context->cookie->is_guest = $customer->isGuest();
+                                        $this->context->cookie->passwd = $customer->passwd;
+                                        $this->context->cookie->email = $customer->email;
+
+                                        $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
+                                    } // fin logueo
 
                                 }else{
                                     // maneja y muestra error
@@ -878,6 +902,31 @@ class CustomerFormCore extends AbstractForm
     
         // Return result 
         return $result; 
+    }
+
+    // Funcion for send transational mail acount
+    function sendConfirmationMail(Customer $customer)
+    {
+        if ($customer->is_guest || !Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
+            return true;
+        }
+
+        return Mail::Send(
+            $this->context->language->id,
+            'account',
+            $this->translator->trans(
+                'Welcome!',
+                array(),
+                'Emails.Subject'
+            ),
+            array(
+                '{firstname}' => $customer->firstname,
+                '{lastname}' => $customer->lastname,
+                '{email}' => $customer->email,
+            ),
+            $customer->email,
+            $customer->firstname.' '.$customer->lastname
+        );
     }
 
 }

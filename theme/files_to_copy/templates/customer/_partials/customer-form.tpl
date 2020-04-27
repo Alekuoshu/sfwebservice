@@ -23,9 +23,11 @@
  * International Registered Trademark & Property of PrestaShop SA
  *}
 {block name='customer_form'}
-  {block name='customer_form_errors'}
+  {if !empty($errors[0])}
+  {block name='login_form_errors'}
     {include file='_partials/sf-errors.tpl' errors=$errors[0]}
   {/block}
+  {/if}
   {* {block name='notifications'}
     {include file='_partials/notifications.tpl'}
   {/block} *}
