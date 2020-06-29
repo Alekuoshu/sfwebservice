@@ -146,7 +146,7 @@ class CustomerFormatterCore implements FormFormatterInterface
             ->setType('email')
             ->setLabel(
                 $this->translator->trans(
-                    'Email', [], 'Shop.Forms.Labels'
+                    'Correo electrónico', [], 'Shop.Forms.Labels'
                 )
             )
             ->setRequired(true)
@@ -162,14 +162,14 @@ class CustomerFormatterCore implements FormFormatterInterface
                 )
             )
             ->setRequired(true)
-            // ->addAvailableValue(
-            //     'placeholder',
-            //     '00000000A'
-            // )
-            ->setMaxLength(15)
+            ->addAvailableValue(
+                'placeholder',
+                'Ej: xxx xxx xxxx'
+            )
+            ->setMaxLength(10)
             ->addAvailableValue(
                 'comment',
-                '(Ejemplo: +570000000000)'
+                '(Ejemplo: Ej: xxx xxx xxxx)'
             )
         ;
 
@@ -212,6 +212,7 @@ class CustomerFormatterCore implements FormFormatterInterface
                     'comment',
                     'Ejemplo: 31-05-1970'
                 )
+                ->setRequired(false)
             ;
         }
 

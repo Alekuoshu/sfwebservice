@@ -81,7 +81,7 @@ class Sfwebservice extends Module
     {
         $this->name = 'sfwebservice';
         $this->tab = 'front_office_features';
-        $this->version = '1.3.2';
+        $this->version = '1.3.3';
         $this->author = 'Alekuoshu';
         $this->need_instance = 1;
 
@@ -133,6 +133,10 @@ class Sfwebservice extends Module
         $this->SFWEBSERVICE_PRIVACY_POLICY = Configuration::get('SFWEBSERVICE_PRIVACY_POLICY');
         $this->SFWEBSERVICE_PRIVACY_POLICY_2 = Configuration::get('SFWEBSERVICE_PRIVACY_POLICY_2');
         $this->SFWEBSERVICE_TERMS_CONDITIONS = Configuration::get('SFWEBSERVICE_TERMS_CONDITIONS');
+
+        // init this function
+        $this->sendDataMasive();
+
     }
 
     /**
@@ -176,56 +180,56 @@ class Sfwebservice extends Module
 
         // copy some custom tpl to current theme
         // pediasure
-        $fromCustomerPartials = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/customer/_partials/';
-        $toCustomerPartials_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/customer/_partials/';
-        $fromCustomer = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/customer/';
-        $toCustomer_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/customer/';
-        $fromPartials = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/_partials/';
-        $toPartials_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/_partials/';
-        // copy js required
-        $fromAssetsJs = _PS_ROOT_DIR_.'/modules/sfwebservice/assetts/js/';
-        $toAssetsJs_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/assets/js/';
+        // $fromCustomerPartials = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/customer/_partials/';
+        // $toCustomerPartials_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/customer/_partials/';
+        // $fromCustomer = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/customer/';
+        // $toCustomer_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/customer/';
+        // $fromPartials = _PS_ROOT_DIR_.'/modules/sfwebservice/theme/files_to_copy/templates/_partials/';
+        // $toPartials_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/templates/_partials/';
+        // // copy js required
+        // $fromAssetsJs = _PS_ROOT_DIR_.'/modules/sfwebservice/assetts/js/';
+        // $toAssetsJs_pe = _PS_ROOT_DIR_.'/themes/dekora_theme4/assets/js/';
         
-        $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_pe);
-        $this->copyCustomFiles2($fromCustomer, $toCustomer_pe);
-        $this->copyCustomFiles3($fromPartials, $toPartials_pe);
-        $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_pe);
+        // $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_pe);
+        // $this->copyCustomFiles2($fromCustomer, $toCustomer_pe);
+        // $this->copyCustomFiles3($fromPartials, $toPartials_pe);
+        // $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_pe);
 
-        // ensure
-        $toCustomerPartials_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/customer/_partials/';
-        $toCustomer_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/customer/';
-        $toPartials_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/_partials/';
-        // copy js required
-        $toAssetsJs_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/assets/js/';
+        // // ensure
+        // $toCustomerPartials_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/customer/_partials/';
+        // $toCustomer_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/customer/';
+        // $toPartials_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/templates/_partials/';
+        // // copy js required
+        // $toAssetsJs_en = _PS_ROOT_DIR_.'/themes/dekora_theme4_ensure/assets/js/';
 
-        $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_en);
-        $this->copyCustomFiles2($fromCustomer, $toCustomer_en);
-        $this->copyCustomFiles3($fromPartials, $toPartials_en);
-        $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_en);
+        // $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_en);
+        // $this->copyCustomFiles2($fromCustomer, $toCustomer_en);
+        // $this->copyCustomFiles3($fromPartials, $toPartials_en);
+        // $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_en);
 
-        // glucerna
-        $toCustomerPartials_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/customer/_partials/';
-        $toCustomer_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/customer/';
-        $toPartials_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/_partials/';
-        // copy js required
-        $toAssetsJs_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/assets/js/';
+        // // glucerna
+        // $toCustomerPartials_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/customer/_partials/';
+        // $toCustomer_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/customer/';
+        // $toPartials_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/templates/_partials/';
+        // // copy js required
+        // $toAssetsJs_glu = _PS_ROOT_DIR_.'/themes/dekora_theme4_glucerna/assets/js/';
 
-        $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_glu);
-        $this->copyCustomFiles2($fromCustomer, $toCustomer_glu);
-        $this->copyCustomFiles3($fromPartials, $toPartials_glu);
-        $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_glu);
+        // $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_glu);
+        // $this->copyCustomFiles2($fromCustomer, $toCustomer_glu);
+        // $this->copyCustomFiles3($fromPartials, $toPartials_glu);
+        // $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_glu);
 
-        // similac
-        $toCustomerPartials_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/customer/_partials/';
-        $toCustomer_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/customer/';
-        $toPartials_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/_partials/';
-        // copy js required
-        $toAssetsJs_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/assets/js/';
+        // // similac
+        // $toCustomerPartials_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/customer/_partials/';
+        // $toCustomer_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/customer/';
+        // $toPartials_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/templates/_partials/';
+        // // copy js required
+        // $toAssetsJs_simi = _PS_ROOT_DIR_.'/themes/dekora_theme4_similac/assets/js/';
 
-        $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_simi);
-        $this->copyCustomFiles2($fromCustomer, $toCustomer_simi);
-        $this->copyCustomFiles3($fromPartials, $toPartials_simi);
-        $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_simi);
+        // $this->copyCustomFiles($fromCustomerPartials, $toCustomerPartials_simi);
+        // $this->copyCustomFiles2($fromCustomer, $toCustomer_simi);
+        // $this->copyCustomFiles3($fromPartials, $toPartials_simi);
+        // $this->copyCustomFiles4($fromAssetsJs, $toAssetsJs_simi);
 
 
         include(dirname(__FILE__).'/sql/install.php');
@@ -394,46 +398,8 @@ class Sfwebservice extends Module
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
-        // get confirmations messages
-        // $output .= $this->displayConfirmations($this->confirmations);
-
         return $output.$this->renderForm();
     }
-
-    /**
-     * show confirmations messages
-     */
-    // private function displayConfirmations($messages)
-    // {
-    //     $output = '';
-    //     if (!empty($messages)) {
-    //         if (method_exists($this, 'displayConfirmation')) {
-    //             foreach ($messages as $message) {
-    //                 $output .= $this->displayConfirmation($message);
-    //             }
-    //         } elseif (version_compare(_PS_VERSION_, '1.5.0.0', '>=') && $this->bootstrap) {
-    //             foreach ($messages as $message) {
-    //                 $this->context->controller->confirmations[] = $message;
-    //             }
-    //         } else {
-    //             if (version_compare(_PS_VERSION_, '1.4.0.0', '<')) {
-    //                 $ps_admin_img = 'https://addons.prestashop.com/img/admin/';
-    //             } else {
-    //                 $ps_admin_img = _PS_ADMIN_IMG_;
-    //             }
-    //             $this->context->smarty->assign(array(
-    //                 'version_14'    => version_compare(_PS_VERSION_, '1.4.0.0', '>='),
-    //                 'version_15'    => version_compare(_PS_VERSION_, '1.5.0.0', '>='),
-    //                 'messages_html' => $messages,
-    //                 'ps_admin_img'  => $ps_admin_img
-    //             ));
-    //             $filename = _PS_MODULE_DIR_.$this->name.DIRECTORY_SEPARATOR.$this->name.'.php';
-    //             $template = '/views/templates/admin/module_confirmation.tpl';
-    //             $output = $this->display($filename, $template);
-    //         }
-    //     }
-    //     return $output;
-    // }
 
     /**
      * Create the form that will be displayed in the configuration of your module.
@@ -939,6 +905,19 @@ class Sfwebservice extends Module
     }
 
     /**
+     * Recursively create a string of directories
+     */
+    public static function createPath($path) {
+
+        if (is_dir($path))
+            return true;
+
+        $prev_path = substr($path, 0, strrpos($path, '/', -2) + 1);
+        $return = self::createPath($prev_path);
+        return ($return && is_writable($prev_path)) ? mkdir($path) : false;
+    }
+
+    /**
     * Add the CSS & JavaScript files you want to be loaded in the BO.
     */
     public function hookBackOfficeHeader()
@@ -960,6 +939,14 @@ class Sfwebservice extends Module
     }
 
     public function hookdisplayHomeSF()
+    {
+
+    }
+
+    /**
+     * Only for testing
+     */
+    public function hookdisplayHome()
     {
         if ($this->SFWEBSERVICE_LIVE_MODE == 1) {
             // self::logtxt("probando log en hookdisplayHomeSF()");
@@ -1204,122 +1191,6 @@ class Sfwebservice extends Module
                 }
             }
         }// end if live mode on
-    }
-
-    /**
-     * Only for testing
-     */
-    public function hookdisplayHome()
-    {
-        // if ($this->SFWEBSERVICE_ACTIVE == 1) {
-        //     // init lib for decrypt
-        //     require_once('lib/API.php');
-        //     // if curl is active
-        //     if($this->canUseCurl()) {
-        //         self::logtxt("---- API Consumme Active!! ----");
-        //         echo "<pre>";
-        //         var_dump('API Consumme Active!!');
-        //         echo "</pre>";
-
-        //         // Authentication2.0
-        //         $token = '';
-        //         $params = array (
-        //             'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
-        //             'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
-        //             'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
-        //             'username' => $this->SFWEBSERVICE_USERNAME,
-        //             'password' => $this->SFWEBSERVICE_PASSWORD
-        //         );
-        //         $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
-        //         $rs 	= API::Authentication2($params,$URL_TOKEN);
-        //         $array  = API::JSON_TO_ARRAY($rs);
-        //         $token 	= $array['access_token'];
-
-        //         echo "<pre>";
-        //         var_dump($token);
-        //         echo "</pre>";
-        //         self::logtxt("Token: $token");
-
-        //         $URL = $this->SFWEBSERVICE_URL_POST_DATA;
-        //         // preparing data
-        //         $data1 = '{"loyalties":[';
-
-        //         $data2 = '{
-        //                     "MobilePhone__c": "+573022471141",
-        //                     "Consumer_Email__c": "alekuoshu@gmail.com",
-        //                     "Consumer_State__c": "Bogotá",
-        //                     "System_3P_unique_id__c": "ENCO0239-1",
-        //                     "Consumer_City__c": "Bogotá",
-        //                     "Consumer_Personal_Id__c": "16355867",
-        //                     "contact_Num__c": "VIL-CO-1608654",
-        //                     "Product_Name__c": "Ensure Advance Fresa",
-        //                     "Product__c": "Ensure",
-        //                     "Points__c": "1500",
-        //                     "SKU_Code__c": "1018589356",
-        //                     "Transaction_Id__c": "ENCO0239",
-        //                     "Quantity__c": "10",
-        //                     "InvoiceId__c": "FMLT20077",
-        //                     "Transaction_Type__c": "COMPRA",
-        //                     "Origin__c": "Ecommerce",
-        //                     "Transaction_Value__c": "70000.00",
-        //                     "Transaction_Date__c": "2019-09-06T12:04:14.000Z"
-        //                 }';
-        //                 $data2 .= ',{
-        //                     "MobilePhone__c": "+573022471141",
-        //                     "Consumer_Email__c": "alekuoshu@gmail.com",
-        //                     "Consumer_State__c": "Bogotá",
-        //                     "System_3P_unique_id__c": "ENCO0239-2",
-        //                     "Consumer_City__c": "Bogotá",
-        //                     "Consumer_Personal_Id__c": "16355867",
-        //                     "contact_Num__c": "VIL-CO-1608654",
-        //                     "Product_Name__c": "Ensure Advance Fresa",
-        //                     "Product__c": "Ensure",
-        //                     "Points__c": "2500",
-        //                     "SKU_Code__c": "1018589356",
-        //                     "Transaction_Id__c": "ENCO0239",
-        //                     "Quantity__c": "8",
-        //                     "InvoiceId__c": "FMLT20077",
-        //                     "Transaction_Type__c": "COMPRA",
-        //                     "Origin__c": "Ecommerce",
-        //                     "Transaction_Value__c": "75000.00",
-        //                     "Transaction_Date__c": "2019-09-06T12:04:14.000Z"
-        //                 }';
-
-        //         $data3 = ']}';
-
-        //         $data = $data1.$data2.$data3;
-
-        //           echo "<pre>";
-        //           var_dump($data);
-        //           echo "</pre>";
-
-        //         // Sending data
-        //         //   $res = API::POST($URL,$token,$data);
-        //         //   $result = API::JSON_TO_ARRAY($res);
-
-        //         //   echo "<pre>";
-        //         //   var_dump($result);
-        //         //   echo "</pre>";
-        //         //   $resultJson = json_encode($result);
-        //         //   $resultJson2 = json_encode($result[0]['errors']);
-        //         //   self::logtxt("Result: $resultJson");
-
-        //         //   // If everything ok without errors
-        //         //   if($result[0]['errors'] != '') {
-        //         //     var_dump('Error!... '.$result[0]["errors"]);
-        //         //     self::logtxt("Result: $resultJson2");
-        //         //   }else{
-        //         //     var_dump('Data enviada con éxito...');
-        //         //     self::logtxt("Data enviada con éxito...");
-        //         //   }
-        //     }
-
-        // }else{
-        //     // API desactivated
-        //     echo "<pre>";
-        //     var_dump('API Consumme No Active!!');
-        //     echo "</pre>";
-        // }
 
     }
 
@@ -1331,10 +1202,9 @@ class Sfwebservice extends Module
     {
         if ($this->SFWEBSERVICE_ACTIVE == 1) {
 
-            self::logtxt("---- API Consumme Active!! ----");
-
             // value if state changed is equal to 5 (Entregado)
             if($params['newOrderStatus']->id == 5) {
+                self::logtxt("---- API Consumme Active!! ----");
 
                 // if CanUseCurl
                 if($this->canUseCurl()) {
@@ -1348,10 +1218,7 @@ class Sfwebservice extends Module
 
                     $orders = new OrderCore($id_order);
 
-                    $id_customer = $params['cart']->id_customer;
-                    if(empty($id_customer) || $id_customer = mull){
-                        $id_customer = $orders->id_customer;
-                    }
+                    $id_customer = $orders->id_customer;
                     self::logtxt("id_customer: $id_customer");
 
                     $customers = self::getCustomersById($id_customer);
@@ -1373,10 +1240,7 @@ class Sfwebservice extends Module
                     $id_saleforce = trim($customers[0]['note']);
                     self::logtxt("id_saleforce: $id_saleforce");
 
-                    $id_address = $params['cart']->id_address_delivery;
-                    if(empty($id_address) || $id_address = mull){
-                        $id_address = $orders->id_address_delivery;
-                    }
+                    $id_address = $orders->id_address_delivery;
                     self::logtxt("id_address: $id_address");
 
                     $address = new AddressCore($id_address);
@@ -1527,8 +1391,16 @@ class Sfwebservice extends Module
 
                     // If everything ok without errors
                     if($result[0]['errors'] != '' || $result[0]['message'] != '') {
-                        // var_dump('Error!... '.$result[0]["errors"]);
-                        self::logtxt("Error: $resultJson2");
+                        if($result[0]['errors'] != '') {
+                            $resultJson2 = json_encode($result[0]['errors']);
+                            self::logtxt("Error: $resultJson2");
+                        }elseif($result[0]['message'] != '') {
+                            $resultJson3 = json_encode($result[0]['message']);
+                            self::logtxt("Error: $resultJson3");
+                        }else{
+                            self::logtxt("Error: Hubo un error!");
+                        }
+                        
                     }else{
                         // var_dump('Result: Data enviada con éxito...');
                         self::logtxt("Result: Data enviada con éxito...");
@@ -1769,7 +1641,6 @@ class Sfwebservice extends Module
                     $data3 = '}';
                     $data = $data1.$data2.$data3;
 
-                    // $data = json_encode($data2);
                     // self::logtxt("Data: $data");
 
                     // Sending data
@@ -1777,15 +1648,21 @@ class Sfwebservice extends Module
                     $result = API::JSON_TO_ARRAY($res);
 
                     $resultJson = json_encode($result);
-                    $resultJson2 = json_encode($result[0]['errors']);
                     self::logtxt("Result: $resultJson");
 
                     // If everything ok without errors
-                    if($result[0]['errors'] != '') {
-                        // var_dump('Error!... '.$result[0]["errors"]);
-                        self::logtxt("Error: $resultJson2");
+                    if($result[0]['errors'] != '' || $result[0]['message'] != '') {
+                        if($result[0]['errors'] != '') {
+                            $resultJson2 = json_encode($result[0]['errors']);
+                            self::logtxt("Error: $resultJson2");
+                        }elseif($result[0]['message'] != '') {
+                            $resultJson3 = json_encode($result[0]['message']);
+                            self::logtxt("Error: $resultJson3");
+                        }else{
+                            self::logtxt("Error: Hubo un error!");
+                        }
+                        
                     }else{
-                        // var_dump('Result: Data enviada con éxito...');
                         self::logtxt("Result: Data enviada con éxito...");
 
                         foreach ($orderDetails as $key => $itemDetail) {
@@ -1840,6 +1717,305 @@ class Sfwebservice extends Module
 
         } // end SFWEBSERVICE_ACTIVE
     } // end sendDataManually
+
+
+    /**
+     * Function for send masive data
+     * getting id_order.
+     */
+    public function sendDataMasive()
+    {
+        if ($this->SFWEBSERVICE_ACTIVE == 1) {
+
+            // $key = $this->SFWEBSERVICE_ACTIVE_KEY_PASSWORD;
+            $key = 'sfsendaData@2020';
+
+            if (Tools::getValue('k') == $key) {
+
+                self::logtxt("---- API Consumme Active!! Envio masivo...----");
+
+                // if CanUseCurl
+                if($this->canUseCurl()) {
+
+                    // init lib for decrypt
+                    require_once('lib/API.php');
+
+                    // get orders ids
+                    $sql = new DbQuery();
+                    $sql->select('*');
+                    $sql->from('orders', 'A');
+                    $sql->where('A.current_state = 5 AND NOT EXISTS (SELECT order_id FROM ps_sf_transactions_history WHERE order_id = A.reference)');
+
+                    $resOrders = Db::getInstance()->executeS($sql);
+                    // echo "<pre>";
+                    // var_dump($resOrders);
+                    // echo "</pre>";
+                    
+                    // $jsonresOrders = json_encode($resOrders);
+                    // self::logtxt("resOrders: $jsonresOrders");
+
+                    // if results
+                    if (!empty($resOrders)) {
+                        $numData = count($resOrders);
+                        self::logtxt("sendDataMasive: Hay ".$numData." registros para enviar!");
+
+                        // iterate all id orders that we need
+                        foreach ($resOrders as $key => $Order) {
+
+                            // get values request
+                            $id_order = $Order['id_order'];
+                            self::logtxt("id_order: $id_order");
+
+                            $orders = new OrderCore($id_order);
+                            $reference = $orders->reference;
+                            self::logtxt("reference: $reference");
+
+                            $id_customer = $orders->id_customer;
+                            // self::logtxt("id_customer: $id_customer");
+
+                            $customers = self::getCustomersById($id_customer);
+                            // $customers = json_encode($customers, true);
+                            // self::logtxt("customer: $customers");
+
+                            $firstname = $customers[0]['firstname'];
+                            // self::logtxt("firstname: $firstname");
+
+                            $lastname = $customers[0]['lastname'];
+                            // self::logtxt("lastname: $lastname");
+
+                            $mobilePhone = $customers[0]['siret'];
+                            // self::logtxt("mobilePhone: $mobilePhone");
+
+                            $email = $customers[0]['email'];
+                            self::logtxt("email: $email");
+
+                            $id_saleforce = trim($customers[0]['note']);
+                            // self::logtxt("id_saleforce: $id_saleforce");
+
+                            $id_address = $orders->id_address_delivery;
+                            // self::logtxt("id_address: $id_address");
+
+                            $address = new AddressCore($id_address);
+                            // $address = json_encode($address, true);
+                            // self::logtxt("customer: $address");
+
+                            $id_country = $address->id_country;
+                            // self::logtxt("id_country: $id_country");
+
+                            $countries = new CountryCore($id_country);
+                            $country = $countries->name;
+                            // self::logtxt("country: $country[1]");
+
+                            $city = $address->city;
+                            // self::logtxt("city: $city");
+                            $dni = $address->dni;
+                            // self::logtxt("dni: $dni");
+                            $id_state = $address->id_state;
+                            // self::logtxt("id_state: $id_state");
+
+                            $states = new StateCore($id_state);
+                            $state = $states->name;
+                            // self::logtxt("state: $state");
+
+                            // obtenemos el lenguaje para saber el pais de la tienda
+                            $languages = Language::getLanguages(true, $this->context->shop->id);
+                            $lang_code = $languages[0]['language_code'];
+
+                            $invoide_id = self::getFacturaDetails($id_order, $lang_code);
+                            // $facturaDetails = json_encode($invoide_id, true);
+                            // self::logtxt("facturaDetails: $facturaDetails");
+                            // self::logtxt("invoide_id: $invoide_id");
+
+                            $date_order = $orders->date_add;
+                            $Explodedate = explode(' ', $date_order);
+                            $date = $Explodedate[0];
+                            $time = $Explodedate[1];
+                            $final_datetime = $date.'T'.$time.'.000Z';
+                            // self::logtxt("date_order: $final_datetime");
+
+                            $orderDetails = $orders->getProductsDetail($id_order);
+                            // $orderDetails = json_encode($orderDetails, true);
+                            // self::logtxt("orderDetails: $orderDetails");
+
+                            $num_details = count($orderDetails);
+                            // self::logtxt("Detalles a enviar: $num_details");
+
+                            $data2 = array();
+                            $count = -1;
+
+                            foreach ($orderDetails as $key => $itemDetail) {
+                                // get details
+                                $product_name = $itemDetail['product_name'];
+                                // self::logtxt("product_name: $product_name");
+
+                                $product_reference = trim($itemDetail['product_reference']);
+                                // self::logtxt("product_reference: $product_reference");
+
+                                $product_quantity = $itemDetail['product_quantity'];
+                                // self::logtxt("product_quantity: $product_quantity");
+
+                                $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                                // self::logtxt("transaction_value: $transaction_value");
+
+                                $id_item = $reference.'-'.($key+1);
+                                // self::logtxt("id_item: $id_item");
+
+                                // evalua el product_reference para homologar el product name a enviar
+                                $db = Db::getInstance();
+                                $sql = 'SELECT final_name FROM '._DB_PREFIX_.'ct_transactions_homologa WHERE sku_id = "'.trim($product_reference).'"';
+                                $final_name = $db->getValue($sql);
+                                $final_name = strtoupper($final_name);
+                                // self::logtxt("final_name: $final_name");
+
+                                // get data2
+                                $count++;
+                                // self::logtxt("contador: $count");
+                                if($count != $num_details){
+                                    $data2[$key]['Contact_FirstName__c'] = $firstname;
+                                    $data2[$key]['Contact_LastName__c'] = $lastname;
+                                    $data2[$key]['MobilePhone__c'] = $mobilePhone;
+                                    $data2[$key]['Consumer_Email__c'] = $email;
+                                    $data2[$key]['System_3P_unique_id__c'] = $id_item;
+                                    // $data2[$key]['Consumer_Country__c'] = $country[1];
+                                    // $data2[$key]['Consumer_State__c'] = $state;
+                                    // $data2[$key]['Consumer_City__c'] = $city;
+                                    $data2[$key]['Consumer_Personal_Id__c'] = $dni;
+                                    $data2[$key]['contact_Num__c'] = $id_saleforce;
+                                    $data2[$key]['Product_Name__c'] = $product_name;
+                                    $data2[$key]['Product__c'] = $final_name;
+                                    $data2[$key]['Points__c'] = '';
+                                    $data2[$key]['SKU_Code__c'] = $product_reference;
+                                    $data2[$key]['Transaction_Id__c'] = $reference;
+                                    $data2[$key]['Quantity__c'] = $product_quantity;
+                                    $data2[$key]['InvoiceId__c'] = $invoide_id;
+                                    $data2[$key]['Transaction_Type__c'] = 'COMPRA';
+                                    $data2[$key]['Origin__c'] = 'Ecommerce';
+                                    $data2[$key]['Transaction_Value__c'] = $transaction_value;
+                                    $data2[$key]['Transaction_Date__c'] = $final_datetime;
+                                }
+
+                            }// End foreach items details
+
+                            // echo "<pre>";
+                            // var_dump($params);
+                            // echo "</pre>";
+
+                            // echo "<pre>";
+                            // var_dump("New Status: Entregado!");
+                            // echo "</pre>";
+                            // self::logtxt("New Status: Entregado!");
+
+                            // Authentication2.0
+                            $token = '';
+                            $params = array (
+                                'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
+                                'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
+                                'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
+                                'username' => $this->SFWEBSERVICE_USERNAME,
+                                'password' => $this->SFWEBSERVICE_PASSWORD
+                            );
+                            $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
+                            $rs 	= API::Authentication2($params,$URL_TOKEN);
+                            $array  = API::JSON_TO_ARRAY($rs);
+                            $token 	= $array['access_token'];
+                            // self::logtxt("Token: $token");
+
+                            $URL = $this->SFWEBSERVICE_URL_POST_DATA;
+                            // preparing data
+                            $data1 = '{"loyalties":';
+                            $data2 = json_encode($data2);
+                            $data3 = '}';
+                            $data = $data1.$data2.$data3;
+
+                            // $data = json_encode($data2);
+                            // self::logtxt("Data: $data");
+
+                            // Sending data
+                            $res = API::POST($URL,$token,$data);
+                            $result = API::JSON_TO_ARRAY($res);
+
+                            $resultJson = json_encode($result);
+                            self::logtxt("Result: $resultJson");
+
+                            // If everything ok without errors
+                            if($result[0]['errors'] != '' || $result[0]['message'] != '') {
+                                if($result[0]['errors'] != '') {
+                                    $resultJson2 = json_encode($result[0]['errors']);
+                                    self::logtxt("Error: $resultJson2");
+                                }elseif($result[0]['message'] != '') {
+                                    $resultJson3 = json_encode($result[0]['message']);
+                                    self::logtxt("Error: $resultJson3");
+                                }else{
+                                    self::logtxt("Error: Hubo un error!");
+                                }
+                                
+                            }else{
+                                self::logtxt("Result: Data enviada con éxito...");
+
+                                foreach ($orderDetails as $key => $itemDetail) {
+                                    // get details
+                                    $product_name = $itemDetail['product_name'];
+                                    $product_reference = trim($itemDetail['product_reference']);
+                                    $product_quantity = $itemDetail['product_quantity'];
+                                    $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                                    $id_item = $reference.'-'.($key+1);
+
+                                    // Insertamos data en ps_sf_transactions_history tabla
+                                    $result =  Db::getInstance()->insert('sf_transactions_history', array(
+                                        'email' => $email,
+                                        'dni' => $dni,
+                                        'id_saleforce' => $id_saleforce,
+                                        'order_unique_id' => $id_item,
+                                        'order_id' => $reference,
+                                        'product_name' => $product_name,
+                                        'sku_code' => $product_reference,
+                                        'quantity' => $product_quantity,
+                                        'invoice_id' => $invoide_id,
+                                        'transaction_type' => 'COMPRA',
+                                        'transaction_value' => $transaction_value,
+                                        'transaction_date' => $final_datetime,
+                                        'created_date' => date("Y-m-d H:i:s"),
+                                    ));
+                                    $error = Db::getInstance()->getMsgError();
+
+                                    if ($result == true) {
+                                        self::logtxt("Registros guardados al history con exito");
+                                    // var_dump("Registros guardados al history con exito");
+                                    } else {
+                                        if ($error != '') {
+                                            self::logtxt($error);
+                                        }
+                                        self::logtxt("Hubo un error al intentar guardar en el history");
+                                        // var_dump("1-Hubo un error al intentar guardar en el history");
+                                    }
+
+                                }// End foreach items details
+
+                            }// end if everything ok
+                            
+                        } //end foreach ids orders
+
+
+                    }else{
+                        self::logtxt("sendDataMasive: No hay registros para enviar!");
+
+                    }// end if results sql statement
+
+                }// end CanUseCurl
+
+            } //end value key for consume
+
+            
+
+        }else{
+            // API desactivated
+            // echo "<pre>";
+            // var_dump('API Consumme No Active!!');
+            // echo "</pre>";
+            self::logtxt("API Consumme No Active!!");
+
+        } // end SFWEBSERVICE_ACTIVE
+    } // end sendDataMasive
 
     /**
      * Retrieve customers by id_customer.

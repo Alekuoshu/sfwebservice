@@ -30,5 +30,10 @@
 (function($) {
     $(document).ready(function() {
         $('#SFWEBSERVICE_GET_ID_ORDER').val('');
+        $('#WSOPENMARKET_GET_ID_ORDER').val('');
+
+        // desactivar campo mensaje donde se guarda el id de saleforce
+        $('#content #noteContent').attr('disabled', 'disabled');
+        $('#content #noteContent').attr('title', 'Solo para uso id salesforce');
     });
 })(jQuery);

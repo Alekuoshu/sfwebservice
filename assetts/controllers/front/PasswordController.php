@@ -74,19 +74,10 @@ class PasswordController extends PasswordControllerCore
                     $Country = new Country();
                     $countryName = $Country::getNameById($idlang, $id_country);
 
-                    // evalua nombre para codificar pais
-                    if($countryName == 'Perú') $codeCountry = 'PE';
-                    if($countryName == 'México') $codeCountry = 'MX';
-                    if($countryName == 'Colombia') $codeCountry = 'CO';
-
-                    // obtiene el id de la tienda
-                    $idShop = $this->context->shop->id;
-                    // Shop::getContextShopID();
-                    // evalua nombre de la tienda para el siteSignature a enviar
-                    if ($idShop == 2) $siteSignature = $codeCountry.'_Pediasure';
-                    if ($idShop == 3) $siteSignature = $codeCountry.'_Glucerna';
-                    if ($idShop == 4) $siteSignature = $codeCountry.'_Ensure';
-                    if ($idShop == 5) $siteSignature = $codeCountry.'_Similac';
+                    // evalua nombre para codificar pais para el siteSignature a enviar
+                    if($countryName == 'Perú') $siteSignature = 'PE';
+                    if($countryName == 'México') $siteSignature = 'MX';
+                    if($countryName == 'Colombia') $siteSignature = 'CO';
 
                     // init lib for consume API
                     require_once (_PS_MODULE_DIR_.'sfwebservice'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'API.php');
@@ -552,19 +543,10 @@ class PasswordController extends PasswordControllerCore
                                         $Country = new Country();
                                         $countryName = $Country::getNameById($idlang, $id_country);
 
-                                        // evalua nombre para codificar pais
-                                        if($countryName == 'Perú') $codeCountry = 'PE';
-                                        if($countryName == 'México') $codeCountry = 'MX';
-                                        if($countryName == 'Colombia') $codeCountry = 'CO';
-
-                                        // obtiene el id de la tienda
-                                        $idShop = $this->context->shop->id;
-                                        // Shop::getContextShopID();
-                                        // evalua nombre de la tienda para el siteSignature a enviar
-                                        if ($idShop == 2) $siteSignature = $codeCountry.'_Pediasure';
-                                        if ($idShop == 3) $siteSignature = $codeCountry.'_Glucerna';
-                                        if ($idShop == 4) $siteSignature = $codeCountry.'_Ensure';
-                                        if ($idShop == 5) $siteSignature = $codeCountry.'_Similac';
+                                        // evalua nombre para codificar pais para el siteSignature a enviar
+                                        if($countryName == 'Perú') $siteSignature = 'PE';
+                                        if($countryName == 'México') $siteSignature = 'MX';
+                                        if($countryName == 'Colombia') $siteSignature = 'CO';
 
                                         // init lib for consume API
                                         require_once (_PS_MODULE_DIR_.'sfwebservice'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'API.php');

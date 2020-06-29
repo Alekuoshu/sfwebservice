@@ -105,7 +105,7 @@ class CustomerLoginFormCore extends AbstractForm
     protected function getEmailMaxLengthViolationMessage()
     {
         return $this->translator->trans(
-            'The %1$s field is too long (%2$d chars max).',
+            'El campo %1$s es muy largo (%2$d caracteres máximo).',
             array('email', 128),
             'Shop.Notifications.Error'
         );
@@ -164,6 +164,7 @@ class CustomerLoginFormCore extends AbstractForm
                         // Data para guardar y enviar por la API
                         $email = $this->getValue('email');
                         $password = $this->getValue('password');
+                        $emailVerify = Tools::getValue('emailVerify');
 
                         // codificando password for saleforce
                         // $secretKey = 'DK7JRDhGJkDFfxKhHilbS6GIsAz78yYr';
@@ -183,19 +184,10 @@ class CustomerLoginFormCore extends AbstractForm
                         $Country = new Country();
                         $countryName = $Country::getNameById($idlang, $id_country);
 
-                        // evalua nombre para codificar pais
-                        if($countryName == 'Perú') $codeCountry = 'PE';
-                        if($countryName == 'México') $codeCountry = 'MX';
-                        if($countryName == 'Colombia') $codeCountry = 'CO';
-
-                        // obtiene el id de la tienda
-                        $idShop = $this->context->shop->id;
-                        // Shop::getContextShopID();
-                        // evalua nombre de la tienda para el siteSignature a enviar
-                        if ($idShop == 2) $siteSignature = $codeCountry.'_Pediasure';
-                        if ($idShop == 3) $siteSignature = $codeCountry.'_Glucerna';
-                        if ($idShop == 4) $siteSignature = $codeCountry.'_Ensure';
-                        if ($idShop == 5) $siteSignature = $codeCountry.'_Similac';
+                        // evalua nombre para codificar pais para el siteSignature a enviar
+                        if($countryName == 'Perú') $siteSignature = 'PE';
+                        if($countryName == 'México') $siteSignature = 'MX';
+                        if($countryName == 'Colombia') $siteSignature = 'CO';
 
                         // init lib for consume API
                         require_once (_PS_MODULE_DIR_.'sfwebservice'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'API.php');
@@ -209,21 +201,12 @@ class CustomerLoginFormCore extends AbstractForm
                             'username' => Configuration::get('SFWEBSERVICE_USERNAME_2'),
                             'password' => Configuration::get('SFWEBSERVICE_PASSWORD_2')
                         );
-                        // echo "<pre>";
-                        // var_dump($params);
-                        // echo "</pre>";
-                        // die();
-                        // error_log("params: ".json_encode($params));
 
                         $URL_TOKEN = Configuration::get('SFWEBSERVICE_URL_GET_TOKEN_2');
                         $rs = API::Authentication2($params,$URL_TOKEN);
                         $array = API::JSON_TO_ARRAY($rs);
                         $token = $array['access_token'];
                         // $sfModule::logtxt("### Token: $token");
-                        // echo "<pre>";
-                        // var_dump($token);
-                        // echo "</pre>";
-                        // die();
 
                         // $customerId = $this->context->customer->id;
                         // $sfModule::logtxt("### Customer ID: $customerId");
@@ -244,142 +227,159 @@ class CustomerLoginFormCore extends AbstractForm
                         // preparing data
                         $dataToSFOTP = json_encode($dataOTP);
 
-                        // $requesting = json_decode($dataToSFOTP);
-                        // echo "<pre>";
-                        // var_dump($dataToSFOTP);
-                        // echo "</pre>";
                         $sfModule::logtxt("### Integration SF Reset OTP: Json enviado -> $dataToSFOTP");
 
                         // Sending data
                         $resOTP = API::POST($urlResetOTP,$token,$dataToSFOTP);
                         $resuOTP = API::JSON_TO_ARRAY($resOTP);
                         $resultOTP = $resuOTP["operationCode"];
+                        $status = $resuOTP['wsuInput']["EmailVerifiedStatus__c"];
                         $resultArrayOTP = json_decode($resultOTP);
 
+                        if($status == true){$StatusEmail = 'Email Validado';}else{$StatusEmail = 'Email No Validado';}
                         $sfModule::logtxt("### Integration SF Reset OTP: Respuesta -> $resultOTP");
-
-                        // echo "<pre>";
-                        // var_dump($resultArrayOTP);
-                        // echo "</pre>";
+                        $sfModule::logtxt("### Integration SF Login: StatusEmail -> $StatusEmail");
 
                         // Si se resetea el OTP
                         if ($resultArrayOTP->rCode == 'opCode_000') {
                             $sfModule::logtxt("### Integration SF ResetOTP: OTP regenerado con éxito!");
 
-                            // verify if email exist
-                            $sfModule::logtxt("### Verifica Email ###");
+                            // si viene de la confirmación de correo
+                            if($emailVerify == true){
 
-                            // consume la API para verificar si el usuario existe o no
-                            $urlEmailVerify = Configuration::get('SFWEBSERVICE_URL_EMAIL_VERIFY');
-                            // $sfModule::logtxt("### Integration SF Email Verify: Servicio -> $urlEmailVerify");
+                                // verify if email exist
+                                $sfModule::logtxt("### Verifica Email ###");
 
-                            // dataEV
-                            $dataEV['userName'] = $email;
-                            $dataEV['email'] = $email;
-                            // $dataEV['OTP'] = $OTP;
-                            $dataEV['siteSignature'] = $siteSignature;
+                                // consume la API para verificar correo
+                                $urlEmailVerify = Configuration::get('SFWEBSERVICE_URL_EMAIL_VERIFY');
+                                // $sfModule::logtxt("### Integration SF Email Verify: Servicio -> $urlEmailVerify");
 
-                            // preparing data
-                            $dataToSFEV = json_encode($dataEV);
-
-                            // $requesting = json_decode($dataToSFEV);
-                            // echo "<pre>";
-                            // var_dump($dataToSFEV);
-                            // echo "</pre>";
-                            $sfModule::logtxt("### Integration SF Email Verify: Json enviado -> $dataToSFEV");
-
-                            // Sending data
-                            $resEV = API::POST($urlEmailVerify,$token,$dataToSFEV);
-                            $resEmailVerify = API::JSON_TO_ARRAY($resEV);
-                            $resultEmailVerify = $resEmailVerify["operationCode"];
-                            $resultArrayEV = json_decode($resultEmailVerify);
-
-                            $sfModule::logtxt("### Integration SF Email Verify: Respuesta -> $resultEmailVerify");
-
-                            // echo "<pre>";
-                            // var_dump($resultArrayEV);
-                            // echo "</pre>";
-
-                            if ($resultArrayEV->rCode == 'opCode_000') {
-                                // todo salio bien
-                                $sfModule::logtxt("### Integration SF Email Verify: Email existe, se puede loguear!");
-                                $sfModule::logtxt("### Loguea ###");
-
-                                // consume la API para login
-                                $urlLogin = Configuration::get('SFWEBSERVICE_URL_LOGIN');
-                                // $sfModule::logtxt("### Integration SF Login: Servicio -> $urlLogin");
-
-                                // dataLog
-                                $dataLog['userName'] = $email;
-                                $dataLog['password'] = $PasswEncrypted;
-                                $dataLog['siteSignature'] = $siteSignature;
+                                // dataEV
+                                $dataEV['userName'] = $email;
+                                $dataEV['email'] = $email;
+                                // $dataEV['OTP'] = $OTP;
+                                $dataEV['siteSignature'] = $siteSignature;
 
                                 // preparing data
-                                $dataToSFLog = json_encode($dataLog);
+                                $dataToSFEV = json_encode($dataEV);
 
-                                // $requesting = json_decode($dataToSFLog);
-                                // echo "<pre>";
-                                // var_dump($dataToSFLog);
-                                // echo "</pre>";
-                                $sfModule::logtxt("### Integration SF Login: Json enviado -> $dataToSFLog");
+                                $sfModule::logtxt("### Integration SF Email Verify: Json enviado -> $dataToSFEV");
 
                                 // Sending data
-                                $resLog = API::POST($urlLogin,$token,$dataToSFLog);
-                                $resLogin = API::JSON_TO_ARRAY($resLog);
-                                $resultLogin = $resLogin["operationCode"];
-                                $resultArrayLogin = json_decode($resultLogin);
+                                $resEV = API::POST($urlEmailVerify,$token,$dataToSFEV);
+                                $resEmailVerify = API::JSON_TO_ARRAY($resEV);
+                                $resultEmailVerify = $resEmailVerify["operationCode"];
+                                $resultArrayEV = json_decode($resultEmailVerify);
 
-                                $sfModule::logtxt("### Integration SF Login: Respuesta -> $resultLogin");
-                                // $sfModule::logtxt("### Integration SF Login: Respuesta -> $resLog");
+                                $sfModule::logtxt("### Integration SF Email Verify: Respuesta -> $resultEmailVerify");
 
-                                // echo "<pre>";
-                                // var_dump($resultArrayLogin);
-                                // echo "</pre>";
-
-                                if ($resultArrayLogin->rCode == 'opCode_000') {
+                                if ($resultArrayEV->rCode == 'opCode_000') {
                                     // todo salio bien
-                                    // Obtiene datos de la respuesta del login
-                                    $apellido = $resLogin["conInput"]['LastName'];
-                                    $nombre = $resLogin["conInput"]['FirstName'];
-                                    $idSF = $resLogin["conInput"]['Contact_Num__c'];
+                                    $sfModule::logtxt("### Integration SF Email Verify: Email existe, se puede loguear!");
+                                    $sfModule::logtxt("### Loguea Confirmación ###");
 
-                                    $customer = new Customer();
-                                    $customerExist = $customer->getByEmail($email);
-                                    if (!Validate::isLoadedObject($customerExist)){
-                                        $sfModule::logtxt("### Integration SF Login: Usuario no existe en prestashop, se va a crear!");
-                                        // Crea el cliente con datos del brandsite
-                                        $customer->lastname = $apellido;
-                                        $customer->firstname = $nombre;
-                                        $customer->email = $email;
-                                        $customer->passwd = Tools::encrypt($password);
-                                        $customer->note = $idSF;
-                                        $customer->active = 1;
-                                        $resAdd = $customer->add();
-                                        if($resAdd) {
-                                            $sfModule::logtxt("### Integration SF: Customer created successfull!");
-                                            // crea el registro address en prestashop
-                                            $address = new Address();
-                                            $address->id_country = $id_country;
-                                            $address->id_customer = $customer->id;
-                                            $address->id_manufacturer = 0;
-                                            $address->id_supplier = 0;
-                                            $address->id_warehouse = 0;
-                                            $address->alias = 'Mi dirección';
-                                            $address->company = '';
-                                            $address->lastname = $apellido;
-                                            $address->firstname = $nombre;
-                                            $address->address1 = ' ';
-                                            $address->city = ' ';
-                                            // $address->phone_mobile = $phone;
-                                            $address->active = 1;
-                                            $address->deleted = 0;
-                                            $address->date_add = date('Y-m-d H:i:s');
-                                            $address->date_upd = date('Y-m-d H:i:s');
-                                            if ($address->add()) {
-                                                // error_log("### Address customer created!");
-                                                $sfModule::logtxt("### Integration SF: Address customer created!");
+                                    // consume la API para login
+                                    $urlLogin = Configuration::get('SFWEBSERVICE_URL_LOGIN');
+                                    // $sfModule::logtxt("### Integration SF Login: Servicio -> $urlLogin");
+
+                                    // dataLog
+                                    $dataLog['userName'] = $email;
+                                    $dataLog['password'] = $PasswEncrypted;
+                                    $dataLog['siteSignature'] = $siteSignature;
+
+                                    // preparing data
+                                    $dataToSFLog = json_encode($dataLog);
+
+                                    $sfModule::logtxt("### Integration SF Login: Json enviado -> $dataToSFLog");
+
+                                    // Sending data
+                                    $resLog = API::POST($urlLogin,$token,$dataToSFLog);
+                                    $resLogin = API::JSON_TO_ARRAY($resLog);
+                                    $resultLogin = $resLogin["operationCode"];
+                                    $resultArrayLogin = json_decode($resultLogin);
+
+                                    $sfModule::logtxt("### Integration SF Login: Respuesta -> $resultLogin");
+                                    // $sfModule::logtxt("### Integration SF Login: Respuesta -> $resLog");
+
+                                    if ($resultArrayLogin->rCode == 'opCode_000') {
+                                        // todo salio bien
+                                        // Obtiene datos de la respuesta del login
+                                        $apellido = $resLogin["conInput"]['LastName'];
+                                        $nombre = $resLogin["conInput"]['FirstName'];
+                                        $idSF = $resLogin["conInput"]['Contact_Num__c'];
+
+                                        $customer = new Customer();
+                                        $customerExist = $customer->getByEmail($email);
+                                        if (!Validate::isLoadedObject($customerExist)){
+                                            $sfModule::logtxt("### Integration SF Login: Usuario no existe en prestashop, se va a crear!");
+                                            // Crea el cliente con datos del brandsite
+                                            $customer->lastname = $apellido;
+                                            $customer->firstname = $nombre;
+                                            $customer->email = $email;
+                                            $customer->passwd = Tools::encrypt($password);
+                                            $customer->note = $idSF;
+                                            $customer->active = 1;
+                                            $resAdd = $customer->add();
+                                            if($resAdd) {
+                                                $sfModule::logtxt("### Integration SF: Customer created successfull!");
+                                                // crea el registro address en prestashop
+                                                $address = new Address();
+                                                $address->id_country = $id_country;
+                                                $address->id_customer = $customer->id;
+                                                $address->id_manufacturer = 0;
+                                                $address->id_supplier = 0;
+                                                $address->id_warehouse = 0;
+                                                $address->alias = 'Mi dirección';
+                                                $address->company = '';
+                                                $address->lastname = $apellido;
+                                                $address->firstname = $nombre;
+                                                $address->address1 = ' ';
+                                                $address->city = ' ';
+                                                // $address->phone_mobile = $phone;
+                                                $address->active = 1;
+                                                $address->deleted = 0;
+                                                $address->date_add = date('Y-m-d H:i:s');
+                                                $address->date_upd = date('Y-m-d H:i:s');
+                                                if ($address->add()) {
+                                                    // error_log("### Address customer created!");
+                                                    $sfModule::logtxt("### Integration SF: Address customer created!");
+                                                }else {
+                                                    $sfModule::logtxt('### Integration SF: Error al intentar crear direccion en prestashop!');
+                                                }
+
+                                                // login customer
+                                                $customer->logged = 1;
+                                                $this->context->customer = $customer;
+                                                $this->context->cookie->id_customer = $customer->id;
+                                                $this->context->cookie->customer_lastname = $customer->lastname;
+                                                $this->context->cookie->customer_firstname = $customer->firstname;
+                                                $this->context->cookie->logged = 1;
+                                                $this->context->cookie->check_cgv = 1;
+                                                $this->context->cookie->is_guest = $customer->isGuest();
+                                                $this->context->cookie->passwd = $customer->passwd;
+                                                $this->context->cookie->email = $customer->email;
+
+                                                $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
+
                                             }else {
-                                                $sfModule::logtxt('### Integration SF: Error al intentar crear direccion en prestashop!');
+                                                // maneja error
+                                                $sfModule::logtxt('### Integration SF: Error al intentar crear usuario en prestashop!');
+                                            }
+
+                                        }else{
+                                            $sfModule::logtxt("### Integration SF Login: Usuario existe, se va a actualizar y loguear!");
+                                            // Actualiza algunos datos que vienen del brandsite
+                                            $customerUpd = new Customer($customer->id);
+                                            $customerUpd->lastname = $apellido;
+                                            $customerUpd->firstname = $nombre;
+                                            $customerUpd->passwd = Tools::encrypt($password);
+                                            $customerUpd->note = $idSF;
+                                            $resUpd = $customerUpd->update();
+                                            if($resUpd) {
+                                                $sfModule::logtxt("### Integration SF: Some Customer data updated!");
+                                            }else {
+                                                // maneja error
+                                                $sfModule::logtxt('### Integration SF: No se actualizo la data en prestashop!');
                                             }
 
                                             // login customer
@@ -395,65 +395,197 @@ class CustomerLoginFormCore extends AbstractForm
                                             $this->context->cookie->email = $customer->email;
 
                                             $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
-
-                                        }else {
-                                            // maneja error
-                                            $sfModule::logtxt('### Integration SF: Error al intentar crear usuario en prestashop!');
                                         }
+                                        
+                                        
 
                                     }else{
-                                        $sfModule::logtxt("### Integration SF Login: Usuario existe, se va a actualizar y loguear!");
-                                        // Actualiza algunos datos que vienen del brandsite
-                                        $customerUpd = new Customer($customer->id);
-                                        $customerUpd->lastname = $apellido;
-                                        $customerUpd->firstname = $nombre;
-                                        $customerUpd->passwd = Tools::encrypt($password);
-                                        $customerUpd->note = $idSF;
-                                        $resUpd = $customerUpd->update();
-                                        if($resUpd) {
-                                            $sfModule::logtxt("### Integration SF: Some Customer data updated!");
+                                        // maneja error
+                                        if($resultArrayLogin->rCode == 'errCode_002'){
+                                            $sfModule::logtxt("### Integration SF Login: Usuario o contraseña invalido!");
+                                            $this->errors[] = 'Usuario o contraseña invalido! - '.$resultArrayLogin->rCode;
+                                        }elseif($resultArrayLogin->rCode == 'errCode_003'){
+                                            $sfModule::logtxt("### Integration SF Login: El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador!");
+                                            $this->errors[] = 'El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador! - '.$resultArrayLogin->rCode;
                                         }else {
-                                            // maneja error
-                                            $sfModule::logtxt('### Integration SF: No se actualizo la data en prestashop!');
+                                            $sfModule::logtxt("### Integration SF Login: Hubo un problema y no se pudo completar la solicitud!");
+                                            $this->errors[] = 'Hubo un problema y no se pudo completar la solicitud!! - '.$resultArrayLogin->rCode;
                                         }
-
-                                        // login customer
-                                        $customer->logged = 1;
-                                        $this->context->customer = $customer;
-                                        $this->context->cookie->id_customer = $customer->id;
-                                        $this->context->cookie->customer_lastname = $customer->lastname;
-                                        $this->context->cookie->customer_firstname = $customer->firstname;
-                                        $this->context->cookie->logged = 1;
-                                        $this->context->cookie->check_cgv = 1;
-                                        $this->context->cookie->is_guest = $customer->isGuest();
-                                        $this->context->cookie->passwd = $customer->passwd;
-                                        $this->context->cookie->email = $customer->email;
-
-                                        $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
+                                        
                                     }
-                                    
-                                    
 
                                 }else{
                                     // maneja error
-                                    if($resultArrayLogin->rCode == 'errCode_002'){
-                                        $sfModule::logtxt("### Integration SF Login: Usuario o contraseña invalido!");
-                                        $this->errors[] = 'Usuario o contraseña invalido! - '.$resultArrayLogin->rCode;
-                                    }elseif($resultArrayLogin->rCode == 'errCode_003'){
-                                        $sfModule::logtxt("### Integration SF Login: El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador!");
-                                        $this->errors[] = 'El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador! - '.$resultArrayLogin->rCode;
-                                    }else {
-                                        $sfModule::logtxt("### Integration SF Login: Hubo un problema y no se pudo completar la solicitud!");
-                                        $this->errors[] = 'Hubo un problema y no se pudo completar la solicitud!! - '.$resultArrayLogin->rCode;
-                                    }
-                                    
+                                    $sfModule::logtxt("### Integration SF Email Verify: Email no existente, debe registrarse!");
+                                    $this->errors[] = 'Usuario no existe, por favor registrese para continuar -> ';
                                 }
 
-                            }else{
-                                // maneja error
-                                $sfModule::logtxt("### Integration SF Email Verify: Email no existente, debe registrarse!");
-                                $this->errors[] = 'Usuario no existe, por favor registrese para continuar -> ';
-                            }
+                            }else{ // fin logueo con verificacion
+
+                                 $sfModule::logtxt("### Loguea Normal ###");
+
+                                 // consume la API para login
+                                 $urlLogin = Configuration::get('SFWEBSERVICE_URL_LOGIN');
+                                 // $sfModule::logtxt("### Integration SF Login: Servicio -> $urlLogin");
+
+                                 // dataLog
+                                 $dataLog['userName'] = $email;
+                                 $dataLog['password'] = $PasswEncrypted;
+                                 $dataLog['siteSignature'] = $siteSignature;
+
+                                 // preparing data
+                                 $dataToSFLog = json_encode($dataLog);
+
+                                 $sfModule::logtxt("### Integration SF Login: Json enviado -> $dataToSFLog");
+
+                                 // Sending data
+                                 $resLog = API::POST($urlLogin,$token,$dataToSFLog);
+                                 $resLogin = API::JSON_TO_ARRAY($resLog);
+                                 $resultLogin = $resLogin["operationCode"];
+                                 $resultArrayLogin = json_decode($resultLogin);
+
+                                $sfModule::logtxt("### Integration SF Login: Respuesta -> $resultLogin");
+                                 // $sfModule::logtxt("### Integration SF Login: Respuesta -> $resLog");
+
+                                 if ($resultArrayLogin->rCode == 'opCode_000') {
+                                     // todo salio bien
+                                     // Obtiene datos de la respuesta del login
+                                     $apellido = $resLogin["conInput"]['LastName'];
+                                     $nombre = $resLogin["conInput"]['FirstName'];
+                                     $idSF = $resLogin["conInput"]['Contact_Num__c'];
+
+                                     $customer = new Customer();
+                                     $customerExist = $customer->getByEmail($email);
+                                     if (!Validate::isLoadedObject($customerExist)){
+                                         $sfModule::logtxt("### Integration SF Login: Usuario no existe en prestashop, se va a crear!");
+                                         // Crea el cliente con datos del brandsite
+                                         $customer->lastname = $apellido;
+                                         $customer->firstname = $nombre;
+                                         $customer->email = $email;
+                                         $customer->passwd = Tools::encrypt($password);
+                                         $customer->note = $idSF;
+                                         $customer->active = 1;
+                                         $resAdd = $customer->add();
+                                         if($resAdd) {
+                                             $sfModule::logtxt("### Integration SF: Customer created successfull!");
+                                             // crea el registro address en prestashop
+                                             $address = new Address();
+                                             $address->id_country = $id_country;
+                                             $address->id_customer = $customer->id;
+                                             $address->id_manufacturer = 0;
+                                             $address->id_supplier = 0;
+                                             $address->id_warehouse = 0;
+                                             $address->alias = 'Mi dirección';
+                                             $address->company = '';
+                                             $address->lastname = $apellido;
+                                             $address->firstname = $nombre;
+                                             $address->address1 = ' ';
+                                             $address->city = ' ';
+                                             // $address->phone_mobile = $phone;
+                                             $address->active = 1;
+                                             $address->deleted = 0;
+                                             $address->date_add = date('Y-m-d H:i:s');
+                                             $address->date_upd = date('Y-m-d H:i:s');
+                                             if ($address->add()) {
+                                                 // error_log("### Address customer created!");
+                                                 $sfModule::logtxt("### Integration SF: Address customer created!");
+                                             }else {
+                                                 $sfModule::logtxt('### Integration SF: Error al intentar crear direccion en prestashop!');
+                                             }
+                                             
+
+                                             // login customer
+                                             $customer->logged = 1;
+                                             $this->context->customer = $customer;
+                                             $this->context->cookie->id_customer = $customer->id;
+                                             $this->context->cookie->customer_lastname = $customer->lastname;
+                                             $this->context->cookie->customer_firstname = $customer->firstname;
+                                             $this->context->cookie->logged = 1;
+                                             $this->context->cookie->check_cgv = 1;
+                                             $this->context->cookie->is_guest = $customer->isGuest();
+                                             $this->context->cookie->passwd = $customer->passwd;
+                                             $this->context->cookie->email = $customer->email;
+
+                                             $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
+
+                                             if($status != true){
+
+                                                // Envia mail transaccional account
+                                                $sendMail = $this->sendConfirmationMail($this->getCustomer());
+                                                if($sendMail) $sfModule::logtxt("### Integration SF: Mail account enviado!");
+    
+                                                $this->success[] = 'Tu correo no ha sido validado aún, revisa la bandeja de entrada de tu correo para confirmar tu registro.';
+                                                $this->redirectWithNotifications($this->getCurrentURL());
+    
+                                             }
+
+                                         }else {
+                                             // maneja error
+                                             $sfModule::logtxt('### Integration SF: Error al intentar crear usuario en prestashop!');
+                                         }
+
+                                     }else{
+                                         $sfModule::logtxt("### Integration SF Login: Usuario existe, se va a actualizar y loguear!");
+                                         // Actualiza algunos datos que vienen del brandsite
+                                         $customerUpd = new Customer($customer->id);
+                                         $customerUpd->lastname = $apellido;
+                                         $customerUpd->firstname = $nombre;
+                                         $customerUpd->passwd = Tools::encrypt($password);
+                                         $customerUpd->note = $idSF;
+                                         $resUpd = $customerUpd->update();
+                                         if($resUpd) {
+                                             $sfModule::logtxt("### Integration SF: Some Customer data updated!");
+                                         }else {
+                                             // maneja error
+                                             $sfModule::logtxt('### Integration SF: No se actualizo la data en prestashop!');
+                                         }
+
+                                         // login customer
+                                         $customer->logged = 1;
+                                         $this->context->customer = $customer;
+                                         $this->context->cookie->id_customer = $customer->id;
+                                         $this->context->cookie->customer_lastname = $customer->lastname;
+                                         $this->context->cookie->customer_firstname = $customer->firstname;
+                                         $this->context->cookie->logged = 1;
+                                         $this->context->cookie->check_cgv = 1;
+                                         $this->context->cookie->is_guest = $customer->isGuest();
+                                         $this->context->cookie->passwd = $customer->passwd;
+                                         $this->context->cookie->email = $customer->email;
+
+                                         $sfModule::logtxt("### Integration SF Login: Logueado con éxito!");
+
+                                         if($status != true){
+
+                                            // Envia mail transaccional account
+                                            $sendMail = $this->sendConfirmationMail($this->context->customer);
+                                            if($sendMail) $sfModule::logtxt("### Integration SF: Mail account enviado!");
+
+                                            $this->success[] = 'Tu correo no ha sido validado aún, revisa la bandeja de entrada de tu correo para confirmar tu registro.';
+                                            $this->redirectWithNotifications($this->getCurrentURL());
+
+                                         }
+
+                                     }
+                                     
+                                     
+
+                                 }else{
+                                     // maneja error
+                                     if($resultArrayLogin->rCode == 'errCode_002'){
+                                         $sfModule::logtxt("### Integration SF Login: Usuario o contraseña invalido!");
+                                         $this->errors[] = 'Usuario o contraseña invalido! - '.$resultArrayLogin->rCode;
+                                     }elseif($resultArrayLogin->rCode == 'errCode_003'){
+                                         $sfModule::logtxt("### Integration SF Login: El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador!");
+                                         $this->errors[] = 'El usuario está deshabilitado o bloqueado. Por favor, contacte al administrador! - '.$resultArrayLogin->rCode;
+                                     }else {
+                                         $sfModule::logtxt("### Integration SF Login: Hubo un problema y no se pudo completar la solicitud!");
+                                         $this->errors[] = 'Hubo un problema y no se pudo completar la solicitud!! - '.$resultArrayLogin->rCode;
+                                     }
+                                     
+                                 }
+
+                            } // fin login normal
+
 
                         }else {
                             // sino maneja error
@@ -481,6 +613,21 @@ class CustomerLoginFormCore extends AbstractForm
 
     public function getTemplateVariables()
     {
+
+
+
+        if ($this->formFields) {
+            if (isset($this->formFields['email'])) {
+                $email_field = $this->formFields['email'];
+                $email_field->setLabel($this->translator->trans(
+                    'Correo electrónico', [], 'Shop.Forms.Labels'
+                ));
+            }
+        }
+
+
+
+
         if (!$this->formFields) {
             $this->formFields = $this->formatter->getFormat();
         }
@@ -522,4 +669,76 @@ class CustomerLoginFormCore extends AbstractForm
         // Return result 
         return $result; 
     }
+
+    // Funcion for send transational mail acount
+    function sendConfirmationMail(Customer $customer)
+    {
+        if ($customer->is_guest || !Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
+            return true;
+        }
+
+        return Mail::Send(
+            $this->context->language->id,
+            'account',
+            $this->translator->trans(
+                'Confirma tu registro!',
+                array(),
+                'Emails.Subject'
+            ),
+            array(
+                '{firstname}' => $customer->firstname,
+                '{lastname}' => $customer->lastname,
+                '{email}' => $customer->email,
+                '{url_confirm}' => $this->context->link->getPageLink('authentication', true, null, array('login' => '1', 'emailVerify' => true)),
+            ),
+            $customer->email,
+            $customer->firstname.' '.$customer->lastname
+        );
+    }
+
+    public function redirectWithNotifications()
+    {
+        $notifications = json_encode(array(
+            'warning' => $this->warning,
+            'success' => $this->success,
+            'info' => $this->info,
+        ));
+
+        if (session_status() == PHP_SESSION_ACTIVE) {
+            $_SESSION['notifications'] = $notifications;
+        } elseif (session_status() == PHP_SESSION_NONE) {
+            session_start();
+            $_SESSION['notifications'] = $notifications;
+        } else {
+            setcookie('notifications', $notifications);
+        }
+
+        return call_user_func_array(array('Tools', 'redirect'), func_get_args());
+    }
+
+    public function getCurrentURL()
+    {
+        return Tools::getCurrentUrlProtocolPrefix().$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+    }
+
+    /**
+     * @return \Customer
+     */
+    public function getCustomer()
+    {
+        $customer = new Customer($this->getValue('id_customer'));
+
+        foreach ($this->formFields as $field) {
+            $customerField = $field->getName();
+            if ($customerField === 'id_customer') {
+                $customerField = 'id';
+            }
+            if (property_exists($customer, $customerField)) {
+                $customer->$customerField = $field->getValue();
+            }
+        }
+
+        return $customer;
+    }
+
 }
