@@ -996,7 +996,7 @@ class Sfwebservice extends Module
 
                 $firstName = $jsonObject->firstName; // yes
                 $lastName = $jsonObject->lastName; // yes
-                $phone = $jsonObject->phone; // yes
+                $mobphone = $jsonObject->phone; // yes
                 $email = $jsonObject->email; // yes
                 $idSF = $jsonObject->id; //yes
                 $exp = $jsonObject->exp; // numero de segundos que el token es valido
@@ -1005,6 +1005,13 @@ class Sfwebservice extends Module
                 // hashing passwd
                 $crypto = ServiceLocator::get('\\PrestaShop\\PrestaShop\\Core\\Crypto\\Hashing');
                 $passwd = $crypto->hash($plaintextPassword);
+
+
+                if (strpos($mobphone, '+') !== false) {
+                    $phone = substr($mobphone, 3, 10);
+                 }else{
+                    $phone = $mobphone;
+                 }
 
 
                 // var_dump($passw);
@@ -1218,233 +1225,247 @@ class Sfwebservice extends Module
 
                     $orders = new OrderCore($id_order);
 
-                    $id_customer = $orders->id_customer;
-                    self::logtxt("id_customer: $id_customer");
-
-                    $customers = self::getCustomersById($id_customer);
-                    // $customers = json_encode($customers, true);
-                    // self::logtxt("customer: $customers");
-
-                    $firstname = $customers[0]['firstname'];
-                    self::logtxt("firstname: $firstname");
-
-                    $lastname = $customers[0]['lastname'];
-                    self::logtxt("lastname: $lastname");
-
-                    $mobilePhone = $customers[0]['siret'];
-                    self::logtxt("mobilePhone: $mobilePhone");
-
-                    $email = $customers[0]['email'];
-                    self::logtxt("email: $email");
-
-                    $id_saleforce = trim($customers[0]['note']);
-                    self::logtxt("id_saleforce: $id_saleforce");
-
-                    $id_address = $orders->id_address_delivery;
-                    self::logtxt("id_address: $id_address");
-
-                    $address = new AddressCore($id_address);
-                    // $address = json_encode($address, true);
-                    // self::logtxt("customer: $address");
-
-                    $id_country = $address->id_country;
-                    self::logtxt("id_country: $id_country");
-
-                    $countries = new CountryCore($id_country);
-                    $country = $countries->name;
-                    self::logtxt("country: $country[1]");
-
-                    $city = $address->city;
-                    self::logtxt("city: $city");
-                    $dni = $address->dni;
-                    self::logtxt("dni: $dni");
-                    $id_state = $address->id_state;
-                    self::logtxt("id_state: $id_state");
-
-                    $states = new StateCore($id_state);
-                    $state = $states->name;
-                    self::logtxt("state: $state");
-
                     $reference = $orders->reference;
                     self::logtxt("reference: $reference");
 
-                    // obtenemos el lenguaje para saber el pais de la tienda
-                    $languages = Language::getLanguages(true, $this->context->shop->id);
-                    $lang_code = $languages[0]['language_code'];
+                    // compatibilidad con masterpremios
+                    $getTransaction = self::getExistTransaction($reference);
 
-                    $invoide_id = self::getFacturaDetails($id_order, $lang_code);
-                    // $facturaDetails = json_encode($facturaDetails, true);
-                    // self::logtxt("facturaDetails: $facturaDetails");
-                    self::logtxt("invoide_id: $invoide_id");
-
-                    $date_order = $orders->date_add;
-                    $Explodedate = explode(' ', $date_order);
-                    $date = $Explodedate[0];
-                    $time = $Explodedate[1];
-                    $final_datetime = $date.'T'.$time.'.000Z';
-                    self::logtxt("date_order: $final_datetime");
-
-                    $orderDetails = $orders->getProductsDetail($id_order);
-                    // $orderDetails = json_encode($orderDetails, true);
-                    // self::logtxt("orderDetails: $orderDetails");
-
-                    $num_details = count($orderDetails);
-                    self::logtxt("Detalles a enviar: $num_details");
-
-                    $data2 = array();
-                    $count = -1;
-
-                    foreach ($orderDetails as $key => $itemDetail) {
-                        // get details
-                        $product_name = $itemDetail['product_name'];
-                        self::logtxt("product_name: $product_name");
-
-                        $product_reference = trim($itemDetail['product_reference']);
-                        self::logtxt("product_reference: $product_reference");
-
-                        $product_quantity = $itemDetail['product_quantity'];
-                        self::logtxt("product_quantity: $product_quantity");
-
-                        $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
-                        self::logtxt("transaction_value: $transaction_value");
-
-                        $id_item = $reference.'-'.($key+1);
-                        self::logtxt("id_item: $id_item");
-
-                        // evalua el product_reference para homologar el product name a enviar
-                        $db = Db::getInstance();
-                        $sql = 'SELECT final_name FROM '._DB_PREFIX_.'ct_transactions_homologa WHERE sku_id = "'.trim($product_reference).'"';
-                        $final_name = $db->getValue($sql);
-                        $final_name = strtoupper($final_name);
-                        self::logtxt("final_name: $final_name");
-
-                        // get data2
-                        $count++; 
-                        self::logtxt("contador: $count");
-                        if($count != $num_details){
-                            $data2[$key]['Contact_FirstName__c'] = $firstname;
-                            $data2[$key]['Contact_LastName__c'] = $lastname;
-                            $data2[$key]['MobilePhone__c'] = $mobilePhone;
-                            $data2[$key]['Consumer_Email__c'] = $email;
-                            $data2[$key]['System_3P_unique_id__c'] = $id_item;
-                            // $data2[$key]['Consumer_Country__c'] = $country[1];
-                            // $data2[$key]['Consumer_State__c'] = $state;
-                            // $data2[$key]['Consumer_City__c'] = $city;
-                            $data2[$key]['Consumer_Personal_Id__c'] = $dni;
-                            $data2[$key]['contact_Num__c'] = $id_saleforce;
-                            $data2[$key]['Product_Name__c'] = $product_name;
-                            $data2[$key]['Product__c'] = $final_name;
-                            $data2[$key]['Points__c'] = '';
-                            $data2[$key]['SKU_Code__c'] = $product_reference;
-                            $data2[$key]['Transaction_Id__c'] = $reference;
-                            $data2[$key]['Quantity__c'] = $product_quantity;
-                            $data2[$key]['InvoiceId__c'] = $invoide_id;
-                            $data2[$key]['Transaction_Type__c'] = 'COMPRA';
-                            $data2[$key]['Origin__c'] = 'Ecommerce';
-                            $data2[$key]['Transaction_Value__c'] = $transaction_value;
-                            $data2[$key]['Transaction_Date__c'] = $final_datetime;
-                        }
-
-                    }// End foreach items details
-
-                    // echo "<pre>";
-                    // var_dump($params);
-                    // echo "</pre>";
-
-                    // echo "<pre>";
-                    // var_dump("New Status: Entregado!");
-                    // echo "</pre>";
-                    self::logtxt("New Status: Entregado!");
-
-                    // Authentication2.0
-                    $token = '';
-                    $params = array (
-                        'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
-                        'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
-                        'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
-                        'username' => $this->SFWEBSERVICE_USERNAME,
-                        'password' => $this->SFWEBSERVICE_PASSWORD
-                    );
-                    $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
-                    $rs 	= API::Authentication2($params,$URL_TOKEN);
-                    $array  = API::JSON_TO_ARRAY($rs);
-                    $token 	= $array['access_token'];
-                    // self::logtxt("Token: $token");
-
-                    $URL = $this->SFWEBSERVICE_URL_POST_DATA;
-                    // preparing data
-                    $data1 = '{"loyalties":';
-                    $data2 = json_encode($data2);
-                    $data3 = '}';
-                    $data = $data1.$data2.$data3;
-
-                    // $data = json_encode($data2);
-                    // self::logtxt("Data: $data");
-
-                    // Sending data
-                    $res = API::POST($URL,$token,$data);
-                    $result = API::JSON_TO_ARRAY($res);
-
-                    $resultJson = json_encode($result);
-                    $resultJson2 = json_encode($result[0]['errors']);
-                    self::logtxt("Result: $resultJson");
-
-                    // If everything ok without errors
-                    if($result[0]['errors'] != '' || $result[0]['message'] != '') {
-                        if($result[0]['errors'] != '') {
-                            $resultJson2 = json_encode($result[0]['errors']);
-                            self::logtxt("Error: $resultJson2");
-                        }elseif($result[0]['message'] != '') {
-                            $resultJson3 = json_encode($result[0]['message']);
-                            self::logtxt("Error: $resultJson3");
-                        }else{
-                            self::logtxt("Error: Hubo un error!");
-                        }
+                    // If dont exist in sf_transactions_history
+                    if(!$getTransaction) {
                         
-                    }else{
-                        // var_dump('Result: Data enviada con éxito...');
-                        self::logtxt("Result: Data enviada con éxito...");
+                        $id_customer = $orders->id_customer;
+                        self::logtxt("id_customer: $id_customer");
+
+                        $customers = self::getCustomersById($id_customer);
+                        // $customers = json_encode($customers, true);
+                        // self::logtxt("customer: $customers");
+
+                        $firstname = $customers[0]['firstname'];
+                        self::logtxt("firstname: $firstname");
+
+                        $lastname = $customers[0]['lastname'];
+                        self::logtxt("lastname: $lastname");
+
+                        $mobilePhone = $customers[0]['siret'];
+                        self::logtxt("mobilePhone: $mobilePhone");
+
+                        $email = $customers[0]['email'];
+                        self::logtxt("email: $email");
+
+                        $id_saleforce = trim($customers[0]['note']);
+                        self::logtxt("id_saleforce: $id_saleforce");
+
+                        $id_address = $orders->id_address_delivery;
+                        self::logtxt("id_address: $id_address");
+
+                        $address = new AddressCore($id_address);
+                        // $address = json_encode($address, true);
+                        // self::logtxt("customer: $address");
+
+                        $id_country = $address->id_country;
+                        self::logtxt("id_country: $id_country");
+
+                        $countries = new CountryCore($id_country);
+                        $country = $countries->name;
+                        self::logtxt("country: $country[1]");
+
+                        $city = $address->city;
+                        self::logtxt("city: $city");
+                        $dni = $address->dni;
+                        self::logtxt("dni: $dni");
+                        $id_state = $address->id_state;
+                        self::logtxt("id_state: $id_state");
+
+                        $states = new StateCore($id_state);
+                        $state = $states->name;
+                        self::logtxt("state: $state");
+
+                        // obtenemos el lenguaje para saber el pais de la tienda
+                        $languages = Language::getLanguages(true, $this->context->shop->id);
+                        $lang_code = $languages[0]['language_code'];
+
+                        $invoide_id = self::getFacturaDetails($id_order, $lang_code);
+                        // $facturaDetails = json_encode($facturaDetails, true);
+                        // self::logtxt("facturaDetails: $facturaDetails");
+                        self::logtxt("invoide_id: $invoide_id");
+
+                        $date_order = $orders->date_add;
+                        $Explodedate = explode(' ', $date_order);
+                        $date = $Explodedate[0];
+                        $time = $Explodedate[1];
+                        $final_datetime = $date.'T'.$time.'.000Z';
+                        self::logtxt("date_order: $final_datetime");
+
+                        $orderDetails = $orders->getProductsDetail($id_order);
+                        // $orderDetails = json_encode($orderDetails, true);
+                        // self::logtxt("orderDetails: $orderDetails");
+
+                        $num_details = count($orderDetails);
+                        self::logtxt("Detalles a enviar: $num_details");
+
+                        $data2 = array();
+                        $count = -1;
 
                         foreach ($orderDetails as $key => $itemDetail) {
                             // get details
                             $product_name = $itemDetail['product_name'];
+                            self::logtxt("product_name: $product_name");
+
                             $product_reference = trim($itemDetail['product_reference']);
+                            self::logtxt("product_reference: $product_reference");
+
                             $product_quantity = $itemDetail['product_quantity'];
+                            self::logtxt("product_quantity: $product_quantity");
+
                             $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                            self::logtxt("transaction_value: $transaction_value");
+
                             $id_item = $reference.'-'.($key+1);
+                            self::logtxt("id_item: $id_item");
 
-                            // Insertamos data en ps_sf_transactions_history tabla
-                            $result =  Db::getInstance()->insert('sf_transactions_history', array(
-                                'email' => $email,
-                                'dni' => $dni,
-                                'id_saleforce' => $id_saleforce,
-                                'order_unique_id' => $id_item,
-                                'order_id' => $reference,
-                                'product_name' => $product_name,
-                                'sku_code' => $product_reference,
-                                'quantity' => $product_quantity,
-                                'invoice_id' => $invoide_id,
-                                'transaction_type' => 'COMPRA',
-                                'transaction_value' => $transaction_value,
-                                'transaction_date' => $final_datetime,
-                                'created_date' => date("Y-m-d H:i:s"),
-                            ));
-                            $error = Db::getInstance()->getMsgError();
+                            // evalua el product_reference para homologar el product name a enviar
+                            $db = Db::getInstance();
+                            $sql = 'SELECT final_name FROM '._DB_PREFIX_.'ct_transactions_homologa WHERE sku_id = "'.trim($product_reference).'"';
+                            $final_name = $db->getValue($sql);
+                            $final_name = strtoupper($final_name);
+                            self::logtxt("final_name: $final_name");
 
-                            if ($result == true) {
-                                self::logtxt("Registros guardados al history con exito");
-                            // var_dump("Registros guardados al history con exito");
-                            } else {
-                                if ($error != '') {
-                                    self::logtxt($error);
-                                }
-                                self::logtxt("Hubo un error al intentar guardar en el history");
-                                // var_dump("1-Hubo un error al intentar guardar en el history");
+                            // get data2
+                            $count++; 
+                            self::logtxt("contador: $count");
+                            if($count != $num_details){
+                                $data2[$key]['Contact_FirstName__c'] = $firstname;
+                                $data2[$key]['Contact_LastName__c'] = $lastname;
+                                $data2[$key]['MobilePhone__c'] = $mobilePhone;
+                                $data2[$key]['Consumer_Email__c'] = $email;
+                                $data2[$key]['System_3P_unique_id__c'] = $id_item;
+                                $data2[$key]['Consumer_Country__c'] = $country[1];
+                                // $data2[$key]['Consumer_State__c'] = $state;
+                                // $data2[$key]['Consumer_City__c'] = $city;
+                                $data2[$key]['Consumer_Personal_Id__c'] = $dni;
+                                $data2[$key]['contact_Num__c'] = $id_saleforce;
+                                $data2[$key]['Product_Name__c'] = $product_name;
+                                $data2[$key]['Product__c'] = $final_name;
+                                $data2[$key]['Points__c'] = '';
+                                $data2[$key]['SKU_Code__c'] = $product_reference;
+                                $data2[$key]['Transaction_Id__c'] = $reference;
+                                $data2[$key]['Quantity__c'] = $product_quantity;
+                                $data2[$key]['InvoiceId__c'] = $invoide_id;
+                                $data2[$key]['Transaction_Type__c'] = 'COMPRA';
+                                $data2[$key]['Origin__c'] = 'Ecommerce';
+                                $data2[$key]['Transaction_Value__c'] = $transaction_value;
+                                $data2[$key]['Transaction_Date__c'] = $final_datetime;
                             }
 
                         }// End foreach items details
 
-                    }// end if everything ok
+                        // echo "<pre>";
+                        // var_dump($params);
+                        // echo "</pre>";
+
+                        // echo "<pre>";
+                        // var_dump("New Status: Entregado!");
+                        // echo "</pre>";
+                        self::logtxt("New Status: Entregado!");
+
+                        // Authentication2.0
+                        $token = '';
+                        $params = array (
+                            'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
+                            'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
+                            'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
+                            'username' => $this->SFWEBSERVICE_USERNAME,
+                            'password' => $this->SFWEBSERVICE_PASSWORD
+                        );
+                        $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
+                        $rs 	= API::Authentication2($params,$URL_TOKEN);
+                        $array  = API::JSON_TO_ARRAY($rs);
+                        $token 	= $array['access_token'];
+                        // self::logtxt("Token: $token");
+
+                        $URL = $this->SFWEBSERVICE_URL_POST_DATA;
+                        // preparing data
+                        $data1 = '{"loyalties":';
+                        $data2 = json_encode($data2);
+                        $data3 = '}';
+                        $data = $data1.$data2.$data3;
+
+                        // $data = json_encode($data2);
+                        // self::logtxt("Data: $data");
+
+                        // Sending data
+                        $res = API::POST($URL,$token,$data);
+                        $result = API::JSON_TO_ARRAY($res);
+
+                        $resultJson = json_encode($result);
+                        $resultJson2 = json_encode($result[0]['errors']);
+                        self::logtxt("Result: $resultJson");
+
+                        // If everything ok without errors
+                        if($result[0]['errors'] != '' || $result[0]['message'] != '') {
+                            if($result[0]['errors'] != '') {
+                                $resultJson2 = json_encode($result[0]['errors']);
+                                self::logtxt("Error: $resultJson2");
+                            }elseif($result[0]['message'] != '') {
+                                $resultJson3 = json_encode($result[0]['message']);
+                                self::logtxt("Error: $resultJson3");
+                            }else{
+                                self::logtxt("Error: Hubo un error!");
+                            }
+                            
+                        }else{
+                            // var_dump('Result: Data enviada con éxito...');
+                            self::logtxt("Result: Data enviada con éxito...");
+
+                            foreach ($orderDetails as $key => $itemDetail) {
+                                // get details
+                                $product_name = $itemDetail['product_name'];
+                                $product_reference = trim($itemDetail['product_reference']);
+                                $product_quantity = $itemDetail['product_quantity'];
+                                $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                                $id_item = $reference.'-'.($key+1);
+
+                                // Insertamos data en ps_sf_transactions_history tabla
+                                $result =  Db::getInstance()->insert('sf_transactions_history', array(
+                                    'email' => $email,
+                                    'dni' => $dni,
+                                    'id_saleforce' => $id_saleforce,
+                                    'order_unique_id' => $id_item,
+                                    'order_id' => $reference,
+                                    'product_name' => $product_name,
+                                    'sku_code' => $product_reference,
+                                    'quantity' => $product_quantity,
+                                    'invoice_id' => $invoide_id,
+                                    'transaction_type' => 'COMPRA',
+                                    'transaction_value' => $transaction_value,
+                                    'transaction_date' => $final_datetime,
+                                    'created_date' => date("Y-m-d H:i:s"),
+                                ));
+                                $error = Db::getInstance()->getMsgError();
+
+                                if ($result == true) {
+                                    self::logtxt("Registros guardados al history con exito");
+                                // var_dump("Registros guardados al history con exito");
+                                } else {
+                                    if ($error != '') {
+                                        self::logtxt($error);
+                                    }
+                                    self::logtxt("Hubo un error al intentar guardar en el history");
+                                    // var_dump("1-Hubo un error al intentar guardar en el history");
+                                }
+
+                            }// End foreach items details
+
+                        }// end if everything ok
+
+
+                    }//end If dont exist in sf_transactions_history
+                    else{
+                        self::logtxt("La orden ya existe en loyalties!");
+                    }
+
+                    
 
                 }// end CanUseCurl
 
@@ -1484,227 +1505,239 @@ class Sfwebservice extends Module
                     $reference = $orders->reference;
                     self::logtxt("reference: $reference");
 
-                    $id_customer = $orders->id_customer;
-                    self::logtxt("id_customer: $id_customer");
+                    // compatibilidad con masterpremios
+                    $getTransaction = self::getExistTransaction($reference);
 
-                    $customers = self::getCustomersById($id_customer);
-                    // $customers = json_encode($customers, true);
-                    // self::logtxt("customer: $customers");
+                    // If dont exist in sf_transactions_history
+                    if(!$getTransaction) {
 
-                    $firstname = $customers[0]['firstname'];
-                    self::logtxt("firstname: $firstname");
+                        $id_customer = $orders->id_customer;
+                        self::logtxt("id_customer: $id_customer");
 
-                    $lastname = $customers[0]['lastname'];
-                    self::logtxt("lastname: $lastname");
+                        $customers = self::getCustomersById($id_customer);
+                        // $customers = json_encode($customers, true);
+                        // self::logtxt("customer: $customers");
 
-                    $mobilePhone = $customers[0]['siret'];
-                    self::logtxt("mobilePhone: $mobilePhone");
+                        $firstname = $customers[0]['firstname'];
+                        self::logtxt("firstname: $firstname");
 
-                    $email = $customers[0]['email'];
-                    self::logtxt("email: $email");
+                        $lastname = $customers[0]['lastname'];
+                        self::logtxt("lastname: $lastname");
 
-                    $id_saleforce = trim($customers[0]['note']);
-                    self::logtxt("id_saleforce: $id_saleforce");
+                        $mobilePhone = $customers[0]['siret'];
+                        self::logtxt("mobilePhone: $mobilePhone");
 
-                    $id_address = $orders->id_address_delivery;
-                    self::logtxt("id_address: $id_address");
+                        $email = $customers[0]['email'];
+                        self::logtxt("email: $email");
 
-                    $address = new AddressCore($id_address);
-                    // $address = json_encode($address, true);
-                    // self::logtxt("customer: $address");
+                        $id_saleforce = trim($customers[0]['note']);
+                        self::logtxt("id_saleforce: $id_saleforce");
 
-                    $id_country = $address->id_country;
-                    self::logtxt("id_country: $id_country");
+                        $id_address = $orders->id_address_delivery;
+                        self::logtxt("id_address: $id_address");
 
-                    $countries = new CountryCore($id_country);
-                    $country = $countries->name;
-                    self::logtxt("country: $country[1]");
+                        $address = new AddressCore($id_address);
+                        // $address = json_encode($address, true);
+                        // self::logtxt("customer: $address");
 
-                    $city = $address->city;
-                    self::logtxt("city: $city");
-                    $dni = $address->dni;
-                    self::logtxt("dni: $dni");
-                    $id_state = $address->id_state;
-                    self::logtxt("id_state: $id_state");
+                        $id_country = $address->id_country;
+                        self::logtxt("id_country: $id_country");
 
-                    $states = new StateCore($id_state);
-                    $state = $states->name;
-                    self::logtxt("state: $state");
+                        $countries = new CountryCore($id_country);
+                        $country = $countries->name;
+                        self::logtxt("country: $country[1]");
 
-                    // obtenemos el lenguaje para saber el pais de la tienda
-                    $languages = Language::getLanguages(true, $this->context->shop->id);
-                    $lang_code = $languages[0]['language_code'];
+                        $city = $address->city;
+                        self::logtxt("city: $city");
+                        $dni = $address->dni;
+                        self::logtxt("dni: $dni");
+                        $id_state = $address->id_state;
+                        self::logtxt("id_state: $id_state");
 
-                    $invoide_id = self::getFacturaDetails($id_order, $lang_code);
-                    // $facturaDetails = json_encode($invoide_id, true);
-                    // self::logtxt("facturaDetails: $facturaDetails");
-                    self::logtxt("invoide_id: $invoide_id");
+                        $states = new StateCore($id_state);
+                        $state = $states->name;
+                        self::logtxt("state: $state");
 
-                    $date_order = $orders->date_add;
-                    $Explodedate = explode(' ', $date_order);
-                    $date = $Explodedate[0];
-                    $time = $Explodedate[1];
-                    $final_datetime = $date.'T'.$time.'.000Z';
-                    self::logtxt("date_order: $final_datetime");
+                        // obtenemos el lenguaje para saber el pais de la tienda
+                        $languages = Language::getLanguages(true, $this->context->shop->id);
+                        $lang_code = $languages[0]['language_code'];
 
-                    $orderDetails = $orders->getProductsDetail($id_order);
-                    // $orderDetails = json_encode($orderDetails, true);
-                    // self::logtxt("orderDetails: $orderDetails");
+                        $invoide_id = self::getFacturaDetails($id_order, $lang_code);
+                        // $facturaDetails = json_encode($invoide_id, true);
+                        // self::logtxt("facturaDetails: $facturaDetails");
+                        self::logtxt("invoide_id: $invoide_id");
 
-                    $num_details = count($orderDetails);
-                    self::logtxt("Detalles a enviar: $num_details");
+                        $date_order = $orders->date_add;
+                        $Explodedate = explode(' ', $date_order);
+                        $date = $Explodedate[0];
+                        $time = $Explodedate[1];
+                        $final_datetime = $date.'T'.$time.'.000Z';
+                        self::logtxt("date_order: $final_datetime");
 
-                    $data2 = array();
-                    $count = -1;
+                        $orderDetails = $orders->getProductsDetail($id_order);
+                        // $orderDetails = json_encode($orderDetails, true);
+                        // self::logtxt("orderDetails: $orderDetails");
 
-                    foreach ($orderDetails as $key => $itemDetail) {
-                        // get details
-                        $product_name = $itemDetail['product_name'];
-                        self::logtxt("product_name: $product_name");
+                        $num_details = count($orderDetails);
+                        self::logtxt("Detalles a enviar: $num_details");
 
-                        $product_reference = trim($itemDetail['product_reference']);
-                        self::logtxt("product_reference: $product_reference");
-
-                        $product_quantity = $itemDetail['product_quantity'];
-                        self::logtxt("product_quantity: $product_quantity");
-
-                        $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
-                        self::logtxt("transaction_value: $transaction_value");
-
-                        $id_item = $reference.'-'.($key+1);
-                        self::logtxt("id_item: $id_item");
-
-                        // evalua el product_reference para homologar el product name a enviar
-                        $db = Db::getInstance();
-                        $sql = 'SELECT final_name FROM '._DB_PREFIX_.'ct_transactions_homologa WHERE sku_id = "'.trim($product_reference).'"';
-                        $final_name = $db->getValue($sql);
-                        $final_name = strtoupper($final_name);
-                        self::logtxt("final_name: $final_name");
-
-                        // get data2
-                        $count++;
-                        self::logtxt("contador: $count");
-                        if($count != $num_details){
-                            $data2[$key]['Contact_FirstName__c'] = $firstname;
-                            $data2[$key]['Contact_LastName__c'] = $lastname;
-                            $data2[$key]['MobilePhone__c'] = $mobilePhone;
-                            $data2[$key]['Consumer_Email__c'] = $email;
-                            $data2[$key]['System_3P_unique_id__c'] = $id_item;
-                            // $data2[$key]['Consumer_Country__c'] = $country[1];
-                            // $data2[$key]['Consumer_State__c'] = $state;
-                            // $data2[$key]['Consumer_City__c'] = $city;
-                            $data2[$key]['Consumer_Personal_Id__c'] = $dni;
-                            $data2[$key]['contact_Num__c'] = $id_saleforce;
-                            $data2[$key]['Product_Name__c'] = $product_name;
-                            $data2[$key]['Product__c'] = $final_name;
-                            $data2[$key]['Points__c'] = '';
-                            $data2[$key]['SKU_Code__c'] = $product_reference;
-                            $data2[$key]['Transaction_Id__c'] = $reference;
-                            $data2[$key]['Quantity__c'] = $product_quantity;
-                            $data2[$key]['InvoiceId__c'] = $invoide_id;
-                            $data2[$key]['Transaction_Type__c'] = 'COMPRA';
-                            $data2[$key]['Origin__c'] = 'Ecommerce';
-                            $data2[$key]['Transaction_Value__c'] = $transaction_value;
-                            $data2[$key]['Transaction_Date__c'] = $final_datetime;
-                        }
-
-                    }// End foreach items details
-
-                    // echo "<pre>";
-                    // var_dump($params);
-                    // echo "</pre>";
-
-                    // echo "<pre>";
-                    // var_dump("New Status: Entregado!");
-                    // echo "</pre>";
-                    self::logtxt("New Status: Entregado!");
-
-                    // Authentication2.0
-                    $token = '';
-                    $params = array (
-                        'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
-                        'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
-                        'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
-                        'username' => $this->SFWEBSERVICE_USERNAME,
-                        'password' => $this->SFWEBSERVICE_PASSWORD
-                    );
-                    $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
-                    $rs 	= API::Authentication2($params,$URL_TOKEN);
-                    $array  = API::JSON_TO_ARRAY($rs);
-                    $token 	= $array['access_token'];
-                    // self::logtxt("Token: $token");
-
-                    $URL = $this->SFWEBSERVICE_URL_POST_DATA;
-                    // preparing data
-                    $data1 = '{"loyalties":';
-                    $data2 = json_encode($data2);
-                    $data3 = '}';
-                    $data = $data1.$data2.$data3;
-
-                    // self::logtxt("Data: $data");
-
-                    // Sending data
-                    $res = API::POST($URL,$token,$data);
-                    $result = API::JSON_TO_ARRAY($res);
-
-                    $resultJson = json_encode($result);
-                    self::logtxt("Result: $resultJson");
-
-                    // If everything ok without errors
-                    if($result[0]['errors'] != '' || $result[0]['message'] != '') {
-                        if($result[0]['errors'] != '') {
-                            $resultJson2 = json_encode($result[0]['errors']);
-                            self::logtxt("Error: $resultJson2");
-                        }elseif($result[0]['message'] != '') {
-                            $resultJson3 = json_encode($result[0]['message']);
-                            self::logtxt("Error: $resultJson3");
-                        }else{
-                            self::logtxt("Error: Hubo un error!");
-                        }
-                        
-                    }else{
-                        self::logtxt("Result: Data enviada con éxito...");
+                        $data2 = array();
+                        $count = -1;
 
                         foreach ($orderDetails as $key => $itemDetail) {
                             // get details
                             $product_name = $itemDetail['product_name'];
+                            self::logtxt("product_name: $product_name");
+
                             $product_reference = trim($itemDetail['product_reference']);
+                            self::logtxt("product_reference: $product_reference");
+
                             $product_quantity = $itemDetail['product_quantity'];
+                            self::logtxt("product_quantity: $product_quantity");
+
                             $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                            self::logtxt("transaction_value: $transaction_value");
+
                             $id_item = $reference.'-'.($key+1);
+                            self::logtxt("id_item: $id_item");
 
-                            // Insertamos data en ps_sf_transactions_history tabla
-                            $result =  Db::getInstance()->insert('sf_transactions_history', array(
-                                'email' => $email,
-                                'dni' => $dni,
-                                'id_saleforce' => $id_saleforce,
-                                'order_unique_id' => $id_item,
-                                'order_id' => $reference,
-                                'product_name' => $product_name,
-                                'sku_code' => $product_reference,
-                                'quantity' => $product_quantity,
-                                'invoice_id' => $invoide_id,
-                                'transaction_type' => 'COMPRA',
-                                'transaction_value' => $transaction_value,
-                                'transaction_date' => $final_datetime,
-                                'created_date' => date("Y-m-d H:i:s"),
-                            ));
-                            $error = Db::getInstance()->getMsgError();
+                            // evalua el product_reference para homologar el product name a enviar
+                            $db = Db::getInstance();
+                            $sql = 'SELECT final_name FROM '._DB_PREFIX_.'ct_transactions_homologa WHERE sku_id = "'.trim($product_reference).'"';
+                            $final_name = $db->getValue($sql);
+                            $final_name = strtoupper($final_name);
+                            self::logtxt("final_name: $final_name");
 
-                            if ($result == true) {
-                                self::logtxt("Registros guardados al history con exito");
-                            // var_dump("Registros guardados al history con exito");
-                            } else {
-                                if ($error != '') {
-                                    self::logtxt($error);
-                                }
-                                self::logtxt("Hubo un error al intentar guardar en el history");
-                                // var_dump("1-Hubo un error al intentar guardar en el history");
+                            // get data2
+                            $count++;
+                            self::logtxt("contador: $count");
+                            if($count != $num_details){
+                                $data2[$key]['Contact_FirstName__c'] = $firstname;
+                                $data2[$key]['Contact_LastName__c'] = $lastname;
+                                $data2[$key]['MobilePhone__c'] = $mobilePhone;
+                                $data2[$key]['Consumer_Email__c'] = $email;
+                                $data2[$key]['System_3P_unique_id__c'] = $id_item;
+                                $data2[$key]['Consumer_Country__c'] = $country[1];
+                                // $data2[$key]['Consumer_State__c'] = $state;
+                                // $data2[$key]['Consumer_City__c'] = $city;
+                                $data2[$key]['Consumer_Personal_Id__c'] = $dni;
+                                $data2[$key]['contact_Num__c'] = $id_saleforce;
+                                $data2[$key]['Product_Name__c'] = $product_name;
+                                $data2[$key]['Product__c'] = $final_name;
+                                $data2[$key]['Points__c'] = '';
+                                $data2[$key]['SKU_Code__c'] = $product_reference;
+                                $data2[$key]['Transaction_Id__c'] = $reference;
+                                $data2[$key]['Quantity__c'] = $product_quantity;
+                                $data2[$key]['InvoiceId__c'] = $invoide_id;
+                                $data2[$key]['Transaction_Type__c'] = 'COMPRA';
+                                $data2[$key]['Origin__c'] = 'Ecommerce';
+                                $data2[$key]['Transaction_Value__c'] = $transaction_value;
+                                $data2[$key]['Transaction_Date__c'] = $final_datetime;
                             }
 
                         }// End foreach items details
 
-                    }// end if everything ok
+                        // echo "<pre>";
+                        // var_dump($params);
+                        // echo "</pre>";
+
+                        // echo "<pre>";
+                        // var_dump("New Status: Entregado!");
+                        // echo "</pre>";
+                        self::logtxt("New Status: Entregado!");
+
+                        // Authentication2.0
+                        $token = '';
+                        $params = array (
+                            'grant_type' => $this->SFWEBSERVICE_GRANT_TYPE,
+                            'client_id' => $this->SFWEBSERVICE_CLIENT_ID,
+                            'client_secret' => $this->SFWEBSERVICE_CLIENT_SECRET,
+                            'username' => $this->SFWEBSERVICE_USERNAME,
+                            'password' => $this->SFWEBSERVICE_PASSWORD
+                        );
+                        $URL_TOKEN	= $this->SFWEBSERVICE_URL_GET_TOKEN;
+                        $rs 	= API::Authentication2($params,$URL_TOKEN);
+                        $array  = API::JSON_TO_ARRAY($rs);
+                        $token 	= $array['access_token'];
+                        // self::logtxt("Token: $token");
+
+                        $URL = $this->SFWEBSERVICE_URL_POST_DATA;
+                        // preparing data
+                        $data1 = '{"loyalties":';
+                        $data2 = json_encode($data2);
+                        $data3 = '}';
+                        $data = $data1.$data2.$data3;
+
+                        // self::logtxt("Data: $data");
+
+                        // Sending data
+                        $res = API::POST($URL,$token,$data);
+                        $result = API::JSON_TO_ARRAY($res);
+
+                        $resultJson = json_encode($result);
+                        self::logtxt("Result: $resultJson");
+
+                        // If everything ok without errors
+                        if($result[0]['errors'] != '' || $result[0]['message'] != '') {
+                            if($result[0]['errors'] != '') {
+                                $resultJson2 = json_encode($result[0]['errors']);
+                                self::logtxt("Error: $resultJson2");
+                            }elseif($result[0]['message'] != '') {
+                                $resultJson3 = json_encode($result[0]['message']);
+                                self::logtxt("Error: $resultJson3");
+                            }else{
+                                self::logtxt("Error: Hubo un error!");
+                            }
+                            
+                        }else{
+                            self::logtxt("Result: Data enviada con éxito...");
+
+                            foreach ($orderDetails as $key => $itemDetail) {
+                                // get details
+                                $product_name = $itemDetail['product_name'];
+                                $product_reference = trim($itemDetail['product_reference']);
+                                $product_quantity = $itemDetail['product_quantity'];
+                                $transaction_value = number_format($itemDetail['total_price_tax_incl'], 2, '.', '');
+                                $id_item = $reference.'-'.($key+1);
+
+                                // Insertamos data en ps_sf_transactions_history tabla
+                                $result =  Db::getInstance()->insert('sf_transactions_history', array(
+                                    'email' => $email,
+                                    'dni' => $dni,
+                                    'id_saleforce' => $id_saleforce,
+                                    'order_unique_id' => $id_item,
+                                    'order_id' => $reference,
+                                    'product_name' => $product_name,
+                                    'sku_code' => $product_reference,
+                                    'quantity' => $product_quantity,
+                                    'invoice_id' => $invoide_id,
+                                    'transaction_type' => 'COMPRA',
+                                    'transaction_value' => $transaction_value,
+                                    'transaction_date' => $final_datetime,
+                                    'created_date' => date("Y-m-d H:i:s"),
+                                ));
+                                $error = Db::getInstance()->getMsgError();
+
+                                if ($result == true) {
+                                    self::logtxt("Registros guardados al history con exito");
+                                // var_dump("Registros guardados al history con exito");
+                                } else {
+                                    if ($error != '') {
+                                        self::logtxt($error);
+                                    }
+                                    self::logtxt("Hubo un error al intentar guardar en el history");
+                                    // var_dump("1-Hubo un error al intentar guardar en el history");
+                                }
+
+                            }// End foreach items details
+
+                        }// end if everything ok
+
+                    }//end If dont exist in sf_transactions_history
+                    else{
+                        self::logtxt("La orden ya existe en loyalties!");
+                    }
+
 
                 }// end CanUseCurl
 
@@ -1876,7 +1909,7 @@ class Sfwebservice extends Module
                                     $data2[$key]['MobilePhone__c'] = $mobilePhone;
                                     $data2[$key]['Consumer_Email__c'] = $email;
                                     $data2[$key]['System_3P_unique_id__c'] = $id_item;
-                                    // $data2[$key]['Consumer_Country__c'] = $country[1];
+                                    $data2[$key]['Consumer_Country__c'] = $country[1];
                                     // $data2[$key]['Consumer_State__c'] = $state;
                                     // $data2[$key]['Consumer_City__c'] = $city;
                                     $data2[$key]['Consumer_Personal_Id__c'] = $dni;
@@ -2072,6 +2105,21 @@ class Sfwebservice extends Module
             return '0';
         }
 
+    }
+
+    /**
+     * Get exist exist transaction
+     * @param string order_reference
+     */
+    public static function getExistTransaction($order_reference) {
+        $query = new DbQuery();
+        $query->select("*");
+        $query->from("sf_transactions_history");
+        $query->where("order_id = '$order_reference'");
+
+        $result = Db::getInstance()->executeS($query);
+
+        return $result;
     }
 
 
